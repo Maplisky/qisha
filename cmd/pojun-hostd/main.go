@@ -1,4 +1,4 @@
-// Command pojun-hostd 是 POJUN 的特权安装助手。
+// Command pojun-hostd 是 QISHA（七杀）的特权安装助手。
 //
 // 它由 systemd 以 root 常驻,只监听一个 Unix socket,按 hosttools 白名单执行
 // 「一键安装」。主服务(pojun)受 NoNewPrivileges + ProtectSystem=strict 限制无法

@@ -28,8 +28,8 @@ jobs:
     timeout-minutes: 30
     env:
       # 冒烟钉一个明确的已发布版本，避免 latest 变动导致不可复现；
-      # 版本里有 darwin 包自 v0.4.66 起。
-      POJUN_SMOKE_VERSION: v0.4.66
+      # 七杀自 v1.0.0 起发布 darwin 包。
+      POJUN_SMOKE_VERSION: v1.0.0
     steps:
       - uses: actions/checkout@v5
 

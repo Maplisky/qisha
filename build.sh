@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# POJUN cross-platform release builder.
+# 七杀 Qisha cross-platform release builder.
 #
 # The default mode builds one target and embeds the already-exported frontend.
 # `./build.sh --release` builds and packages all supported desktop/server targets.

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# POJUN 管理员密码重置脚本
+# 七杀 Qisha 管理员密码重置脚本
 #
 # 登录用户名固定为 POJUN；密码以 bcrypt 哈希存放在数据库 settings 表的
 # auth.password_hash 键。本脚本连上数据库后，用 pgcrypto 在库内生成 bcrypt 哈希
@@ -178,7 +178,7 @@ if [[ "$MODE" == "local" ]]; then
 
   info "目标数据库：$target"
   if [[ "$ASSUME_YES" -ne 1 ]]; then
-    read -r -p "确认在该库重置 POJUN 密码？[y/N] " ans
+    read -r -p "确认在该库重置管理员密码？[y/N] " ans
     [[ "$ans" == "y" || "$ans" == "Y" ]] || die "已取消"
   fi
 
@@ -212,7 +212,7 @@ else
 
   info "目标：容器 $CONTAINER 内 psql -U $DUSER -d $DNAME（exec=$EXEC_KIND）"
   if [[ "$ASSUME_YES" -ne 1 ]]; then
-    read -r -p "确认在该容器数据库重置 POJUN 密码？[y/N] " ans
+    read -r -p "确认在该容器数据库重置管理员密码？[y/N] " ans
     [[ "$ans" == "y" || "$ans" == "Y" ]] || die "已取消"
   fi
 
@@ -232,4 +232,4 @@ else
 fi
 
 unset POJUN_RESET_NEWPASS
-echo "✓ 已重置 POJUN 管理员密码。请用用户名 POJUN + 新密码登录（无需重启服务）。"
+echo "✓ 已重置管理员密码。请用用户名 POJUN + 新密码登录（无需重启服务）。"

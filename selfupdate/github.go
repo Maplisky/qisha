@@ -17,11 +17,17 @@ import (
 // 一条远程代码执行通道，对一个渗透测试平台来说这个口子开不得。二开/镜像要在构建时
 // 用 `-ldflags "-X github.com/Maplisky/qisha/selfupdate.Repo=owner/name"` 覆盖，
 // 这样改的是产物本身，不是运行期可篡改的开关。
-var Repo = "chu0119/pojun"
+//
+// 七杀（Qisha）自 v1.0.0 起独立于上游 chu0119/Pojun 演进：发布源只能是七杀自己的
+// 仓库。指向任何别的仓库都意味着一键更新会把本地的改动（军团条令、任务级上限等）
+// 整体覆盖成别人的构建。
+var Repo = "Maplisky/qisha"
 
 func latestURL() string { return "https://api.github.com/repos/" + Repo + "/releases/latest" }
 
-func tagURL(tag string) string { return "https://api.github.com/repos/" + Repo + "/releases/tags/" + tag }
+func tagURL(tag string) string {
+	return "https://api.github.com/repos/" + Repo + "/releases/tags/" + tag
+}
 
 // allowedHosts 限定升级链路能访问的域名。配合下面的 checkRedirect，
 // 任何一跳被重定向到名单外的主机都会直接失败——这是防止 DNS 污染 / 中间人

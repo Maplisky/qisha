@@ -1,0 +1,55 @@
+七杀 Qisha — 来源与第三方声明
+=============================
+
+七杀 Qisha 以 GNU Affero General Public License v3 发布，全文见同目录的 LICENSE。
+本项目是独立项目，与下列项目的作者没有隶属关系。血统与致意如下。
+
+1. chu0119/Pojun（破军）
+------------------------
+   七杀 fork 自 https://github.com/chu0119/Pojun 的 v0.4.86，许可 AGPL-3.0。
+   Pojun 本身接手自已删除的原作者项目 Autumn-27/ARTEX
+   （https://github.com/Autumn-27/ARTEX ，百度“Agent+”攻防挑战赛冠军项目）的最终定版 v0.3.15，
+   并在其后独立演进。双图架构、planner/worker 编排、MITM 流量代理、审批门框架与基础工具集
+   都来自这条线。七杀的 git 历史完整保留了上述两个项目的全部提交。
+
+2. sapper-v2（军团调度条令的来源）
+----------------------------------
+   https://github.com/N1nEmAn/sapper-v2 ，许可 MIT。
+   七杀的军团调度条令——规划者内置提示词中的「多目标调度军规」，以及内置技能
+   `skills/legion-command` 与 `skills/legion-tactics`——提炼自 sapper-v2 的指挥条令
+   与战役复盘，没有复制其代码。原项目的许可声明如下：
+
+   ---------------------------------------------------------------------
+   MIT License
+
+   Copyright (c) 2026 N1nEmAn
+
+   Permission is hereby granted, free of charge, to any person obtaining a copy
+   of this software and associated documentation files (the "Software"), to deal
+   in the Software without restriction, including without limitation the rights
+   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+   copies of the Software, and to permit persons to whom the Software is
+   furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included in all
+   copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+   SOFTWARE.
+   ---------------------------------------------------------------------
+
+3. norma（Agent 引擎 / harness SDK）
+------------------------------------
+   位于 `third_party/norma/`，取自 `github.com/chu0119/Norma` 的 v0.4.4（`github.com/Autumn-27/norma`
+   的 fork），许可 Apache License 2.0，全文见 `third_party/norma/LICENSE`。内容未作改动。
+   出处与升级方式见 `third_party/README.md`。
+
+4. 其余依赖与语料
+------------------
+   通过 `go.mod` / `web/package-lock.json` 引入的第三方库，以及 SecLists、nuclei-templates 等
+   语料，各自的许可以其发布仓库为准。

@@ -124,12 +124,12 @@ jobs:
             echo "**Linux / macOS**（amd64 + arm64，一条命令全自动安装）："
             echo ""
             echo '```bash'
-            echo 'curl -fsSL https://github.com/chu0119/Pojun/releases/latest/download/install.sh | sudo bash'
+            echo 'curl -fsSL https://github.com/Maplisky/qisha/releases/latest/download/install.sh | sudo bash'
             echo '```'
             echo ""
             echo "**Windows**：使用 Docker Desktop（WSL2 后端），见 README「快速开始」。"
             echo "**升级**：已有部署走页面「一键更新」，或用本页对应平台的 zip + SHA256SUMS 原地换装。"
-            echo "**镜像**：\`ghcr.io/chu0119/pojun:$GITHUB_REF_NAME\`（amd64/arm64；Docker 形态工具链随镜像内置）。"
+            echo "**镜像**：\`ghcr.io/maplisky/qisha:$GITHUB_REF_NAME\`（amd64/arm64；Docker 形态工具链随镜像内置）。"
             echo ""
             echo "详细安装/配置/预设说明见 README 与 docs/部署手册.md。"
             echo ""
@@ -152,7 +152,7 @@ jobs:
             echo ""
             echo "---"
             echo ""
-            echo "完整逐版本历史见 [CHANGELOG.md](https://github.com/chu0119/Pojun/blob/main/CHANGELOG.md)。"
+            echo "完整逐版本历史见 [CHANGELOG.md](https://github.com/Maplisky/qisha/blob/main/CHANGELOG.md)。"
           } > /tmp/release-notes.md
           head -30 /tmp/release-notes.md
       - uses: softprops/action-gh-release@v2
@@ -165,7 +165,7 @@ jobs:
 
   # ④ 多架构镜像（复用 binaries 编好的 Linux 二进制，镜像里只装工具 + 放二进制；
   #    arm64 仅需模拟 apt 层，构建快很多）。
-  #    始终发布到 GHCR（ghcr.io/chu0119/pojun）——用 Actions 内置 GITHUB_TOKEN，
+  #    始终发布到 GHCR（ghcr.io/maplisky/qisha）——用 Actions 内置 GITHUB_TOKEN，
   #    无需配置任何 secrets；若另外配置了 DOCKERHUB_USERNAME / DOCKERHUB_TOKEN
   #    secrets，则同时推送到 <DockerHub用户名>/pojun，方便习惯 Docker Hub 的用户。
   docker-cred-check:
@@ -218,9 +218,9 @@ jobs:
           DOCKERHUB_OK: ${{ needs.docker-cred-check.outputs.ok }}
           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
         run: |
-          imgs="ghcr.io/chu0119/pojun"
+          imgs="ghcr.io/maplisky/qisha"
           if [ "$DOCKERHUB_OK" = "true" ] && [ -n "$DOCKERHUB_USERNAME" ]; then
-            imgs="$imgs,${DOCKERHUB_USERNAME}/pojun"
+            imgs="$imgs,${DOCKERHUB_USERNAME}/qisha"
           fi
           echo "images=$imgs" >> "$GITHUB_OUTPUT"
       - uses: docker/metadata-action@v5

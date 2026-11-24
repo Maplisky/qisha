@@ -1,24 +1,26 @@
 <div align="center">
 
-<img src="screenshots/pojun-logo.png" width="96" alt="Pojun"/>
+<img src="web/public/logo.png" width="96" alt="Qisha"/>
 
-# 破军 Pojun
+# 七杀 Qisha
 
 **AI 自主渗透测试平台 · 从一句话目标到可交付漏洞报告**
 
-> 破军，北斗第七星，主杀伐、主变局。<br/>
-> 找到防线的破口，并把破口证明给你看。
+> 七杀，与破军同属「杀破狼」，主征伐、主决断。<br/>
+> 把防线打穿，并把结果证明给你看。
 
-[![Release](https://img.shields.io/github/v/release/chu0119/Pojun?label=%E7%89%88%E6%9C%AC&color=red)](https://github.com/chu0119/Pojun/releases)
-[![CI](https://github.com/chu0119/Pojun/actions/workflows/ci.yml/badge.svg)](https://github.com/chu0119/Pojun/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/Maplisky/qisha?label=%E7%89%88%E6%9C%AC&color=red)](https://github.com/Maplisky/qisha/releases)
+[![CI](https://img.shields.io/github/actions/workflow/status/Maplisky/qisha/ci.yml?branch=main&label=CI)](https://github.com/Maplisky/qisha/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue)](LICENSE)
-![Go](https://img.shields.io/badge/Go-1.24+-00ADD8?logo=go&logoColor=white)
+![Go](https://img.shields.io/badge/Go-1.26+-00ADD8?logo=go&logoColor=white)
 ![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Docker-lightgrey)
 ![Docker](https://img.shields.io/badge/Docker-ghcr.io-2496ED?logo=docker&logoColor=white)
 
-**Go 单体后端** · **Next.js 内嵌前端** · **PostgreSQL** · **多 Agent 自主推进** · **全程证据留痕**
+**Go 单体后端** · **Next.js 内嵌前端** · **PostgreSQL** · **多 Agent 自主推进** · **军团调度条令** · **全程证据留痕**
 
-📦 [一条命令安装](#快速开始) · 🧠 [单技能版 pojun-skill](https://github.com/chu0119/pojun-skill) —— 本平台方法论的单 skill 版，任意 AI Agent 即装即用
+独立演进自 [chu0119/Pojun v0.4.86](https://github.com/chu0119/Pojun)（AGPL-3.0）；调度思想借鉴 [sapper-v2](https://github.com/N1nEmAn/sapper-v2)（MIT）。
+
+📦 [一条命令安装](#快速开始) · 🧭 [七杀与上游 Pojun 的差异](#七杀与上游-pojun-的差异)
 
 </div>
 
@@ -50,7 +52,7 @@ curl -fsSL https://github.com/chu0119/Pojun/releases/latest/download/install.sh 
 **Windows / 已有 Docker（工具链全在镜像里，宿主机零安装）：**
 
 ```bash
-git clone --depth 1 https://github.com/chu0119/Pojun.git pojun && cd pojun
+git clone --depth 1 https://github.com/chu0119/Pojun.git qisha && cd qisha
 cp .env.example .env    # Windows 用 copy；至少改 POSTGRES_PASSWORD
 # Windows（Docker Desktop，WSL2 后端）：
 docker compose -f docker-compose.yml -f docker-compose.windows.yml up -d
@@ -77,7 +79,7 @@ docker compose up -d
 | | |
 |---|---|
 | **🚀 部署** | [安装详解](#安装详解) · [配置速查](#配置速查) |
-| **📸 产品** | [界面速览](#界面速览) · [核心能力](#核心能力) · [系统架构](#系统架构) · [与同类项目的差异](#与同类项目的差异) |
+| **📸 产品** | [七杀与上游 Pojun 的差异](#七杀与上游-pojun-的差异) · [界面速览](#界面速览) · [核心能力](#核心能力) · [系统架构](#系统架构) · [与同类项目的差异](#与同类项目的差异) |
 | **🧰 资产与纪律** | [内置资产清单：技能 / MCP / 工具](#内置资产清单技能--mcp--工具) · [实战纪律与安全边界](#实战纪律与安全边界) |
 | **👥 参与** | [开发与贡献](#开发与贡献) · [文档索引](#文档索引) · [来源声明](#来源声明) · [许可与免责声明](#许可与免责声明) |
 
@@ -85,10 +87,10 @@ docker compose up -d
 
 ## 这是什么
 
-Pojun 是一套 **LLM 多 Agent 自主渗透测试平台**：给一句话目标，它自动完成
+七杀是一套 **LLM 多 Agent 自主渗透测试平台**：给一句话目标，它自动完成
 「目标拆解 → 侦察 → 漏洞挖掘 → 利用 → 后渗透 → 报告」全流程，人随时可以插手纠偏。
 
-它不是一个「包一层 API 的扫描器」。Pojun 的核心设计是**让 AI 像一个守纪律的渗透测试工程师一样干活**：
+它不是一个「包一层 API 的扫描器」。七杀的核心设计是**让 AI 像一个守纪律的渗透测试工程师一样干活**：
 
 - **目标闸门**——每个目标必须带可核验的验收标准（如「未授权接口不带凭据返回 200 且
   含业务数据」「越权请求能读取到非本人对象的完整字段」），
@@ -100,8 +102,55 @@ Pojun 是一套 **LLM 多 Agent 自主渗透测试平台**：给一句话目标�
 - **全程留痕**——所有 HTTP/S 流量过 MITM 代理逐请求留存，发现绑定流量证据，
   每一步 activity 可回放，「这个结论是怎么得出的」全程可回溯。
 
-单机实测基线（真实授权项目数据，Kali 部署）：12 个任务、56,000+ 次工具调用、
+上游 Pojun 公布的单机实测基线（真实授权项目数据，Kali 部署）：12 个任务、56,000+ 次工具调用、
 **295 个确认漏洞**（严重 28 / 高危 140）、2,752 个资产节点，全程无人值守。
+
+---
+
+## 七杀与上游 Pojun 的差异
+
+七杀 Qisha 自 v1.0.0 起独立于上游 [chu0119/Pojun](https://github.com/chu0119/Pojun) 演进：发布源与 Go 模块路径
+（`github.com/Maplisky/qisha`）都是七杀自己的，**不再跟随上游发版**。功能基线取自上游 v0.4.86，
+在此之上加入下列改动。
+
+### 1. 军团调度条令
+
+调度思想来自多 Agent 渗透军团的实战复盘（sapper-v2：腾讯云智能攻防赛 634 队冠军，8 小时无人值守）：
+
+| 机制 | 落点 | 作用 |
+|---|---|---|
+| 侦察先行分级、easy-first、升级决策表（10/20/30/45 分钟）、中场火力审计、残局重开 | 规划者内置提示词、`legion-command` | 把「派什么、派多深、何时止损」写成明文军规，不靠临场发挥 |
+| 提权素材即弹药、情报转移、同族迁移 | 同上 | SUID、口令哈希、凭据一旦入库立即派利用意图；一个打法验证后立刻评估它在同指纹资产上的可迁移性 |
+| 士兵战术手册：卡壳自救阶梯、立足点后重新枚举、目标输出不可信 | `legion-tactics` | 执行者少走弯路，不被目标内容里的指令带偏 |
+| 打击速查梯：指纹 → CVE → nuclei 标签 → 现成 payload | `strike-quickref` | 老组件先查表再摸索 |
+| 分层用脑 | 按角色配置 LLM（见[模型路由策略](docs/模型路由策略.md)） | 强模型做决策，轻模型做执行 |
+
+### 2. 任务级收尾上限
+
+真实渗透里长时间没有结果是常态，上限应当由人按任务掌握：
+
+- **规划轮数上限**可在新建任务时按任务设置（留空 = 沿用系统设置，0 = 不限），与时间上限相互独立；
+- **超时任务可由人工「继续运行」**并重设两个上限：已写回的事实、发现、凭据全部保留，时间预算与轮数计数
+  从继续时刻重新起算。入口在任务列表的行内按钮与任务详情页。
+
+### 3. 新增的内置任务模板
+
+黑盒·主机全权限证明、靶场占靶·flag 集齐、快速漏洞面核对（轻量）、业务逻辑与越权深挖（双身份对照）、单机后渗透。
+
+### 本地靶场实测
+
+在七杀的军团条令与技能配置下、本地隔离靶场中的结果：
+
+| 场景 | 结果 | 用时 | Token 输入 |
+|---|---|---|---|
+| VulnHub DC-1（单机，占靶模板） | 5/5 flag | 32 分钟 | 9.7M（缓存命中 87%） |
+| Kioptrix 三连（3 台同网段，一个任务） | 3/3 root | 3 小时 05 分 | 70.1M（缓存命中 93%） |
+
+### 从上游 Pojun 原地升级
+
+数据、配置、登录状态全部沿用：可执行文件、安装目录（`/opt/pojun`）、systemd 服务名、环境变量前缀
+（`POJUN_*`）、登录用户名（`POJUN`）与本地存储键都没有改——改的只有产品名、Go 模块路径与发布源。
+上游 v0.4.86 的实例把二进制换成七杀的即可；一键更新只从七杀自己的 Release 拉取。
 
 ---
 
@@ -242,7 +291,7 @@ sequenceDiagram
 
 ### 7. 漏洞情报运营（持续，不是静态知识库）
 
-多数同类产品的情报是「按组件查」；Pojun 做的是「**按时间流**」——
+多数同类产品的情报是「按组件查」；七杀做的是「**按时间流**」——
 **最近 7 天爆了什么 → 匹配我的资产 → 排进任务**：
 
 - NVD 全量/增量（实测库 42 万+）+ **CISA KEV 在野利用** + GitHub Advisory
@@ -406,7 +455,7 @@ curl -fsSL .../install.sh | sudo bash -s -- --mode=docker
 已经会用 Docker 的话，不需要 install.sh：
 
 ```bash
-git clone --depth 1 https://github.com/chu0119/Pojun.git pojun && cd pojun
+git clone --depth 1 https://github.com/chu0119/Pojun.git qisha && cd qisha
 cp .env.example .env      # 至少改 POSTGRES_PASSWORD；POJUN_TAG 可钉到具体版本（如 v0.4.64）
 docker compose up -d      # → http://localhost:8787
 ```
@@ -414,7 +463,7 @@ docker compose up -d      # → http://localhost:8787
 **Windows（Docker Desktop，WSL2 后端）**：
 
 ```powershell
-git clone --depth 1 https://github.com/chu0119/Pojun.git pojun; cd pojun
+git clone --depth 1 https://github.com/chu0119/Pojun.git qisha; cd qisha
 copy .env.example .env    # 至少改 POSTGRES_PASSWORD
 docker compose -f docker-compose.yml -f docker-compose.windows.yml up -d
 # → http://localhost:8787
@@ -430,7 +479,7 @@ docker compose -f docker-compose.yml -f docker-compose.windows.yml up -d
 - 其余与 Linux 相同：镜像内置全部渗透工具 / LibreOffice / Playwright，无需在
   Windows 宿主机安装任何工具链。建议 Docker Desktop 分配 ≥8G 内存。
 
-- 镜像 `ghcr.io/chu0119/pojun`，amd64/arm64 双架构，`POJUN_TAG` 默认 `latest`；
+- 镜像 `ghcr.io/maplisky/qisha`，amd64/arm64 双架构，`POJUN_TAG` 默认 `latest`；
   渗透工具随镜像内置（与二进制 `--with-tools` 同一套）：nmap / masscan /
   sqlmap / hydra / whatweb / nikto / ffuf / john / impacket / socat /
   proxychains / nuclei / httpx / subfinder / naabu / dnsx / katana / tlsx /
@@ -553,7 +602,7 @@ chisel/ligolo-ng/socat/proxychains/linpeas/pspy/responder…）、
 
 ## 与同类项目的差异
 
-| 维度 | 常见同类 | Pojun |
+| 维度 | 常见同类 | 七杀 |
 |---|---|---|
 | 完成判定 | LLM 自评「任务完成」即可收官 | 目标 + 验收标准 + `goal_met` 闸门，未全达成强制记未完成 |
 | 漏洞可信度 | 扫描器输出直接入库 | 机械验证凭据闸门 + L1-L4 证据分级 + 对抗式自检，critical/high 必须 L3+ |
@@ -601,7 +650,7 @@ guard/          工具调用审批门（把裁决接进 agent 执行链）
 listener/       回连接收器：接住反弹 shell / OOB 回连并留证
 traffic/        MITM 流量记录代理 + 出口代理池
 vulnintel/      漏洞情报：NVD/KEV/GHSA/PoC/快通道/资产联动/限速闸门
-hosttools/      宿主工具目录（66 件，按攻击面分类）
+hosttools/      宿主工具目录（90 件，按攻击面分类）
 hostd/          特权助手：root 常驻 unix socket，装工具/特权操作
 llmpool/        LLM 多通道轮询池：熔断/故障转移
 llmrec/         LLM 请求录制与 token 计量
@@ -637,16 +686,18 @@ docs/           设计文档 / 部署手册 / 能力对照
 
 ## 来源声明
 
-本项目最初 fork 自己删除的原作者项目
-[Autumn-27/ARTEX](https://github.com/Autumn-27/ARTEX)（百度“Agent+”攻防挑战赛
-冠军项目）的最终定版 v0.3.15，原作者代码保留在 git 历史里作为起点。
+七杀 Qisha 是独立项目，血统上有两位前辈，git 历史完整保留了他们的全部提交：
 
-- **保留**：双图架构、planner/worker 编排、MITM 流量代理、审批门框架、基础
-  工具集——原作者的架构设计是优秀的，git 历史向其致意；
-- **重建**：全部设计文档、CI 门禁、依赖解耦（norma SDK fork）、Docker 源；
-- **独立演进**：v0.3.16 以来 700+ 提交、约 5 万行新增由本仓库维护者完成，
-  覆盖情报运营 / 目标闸门 / 攻击链 / 执行面 / 去重合并 / 证据链 / 技能体系等
-  整条能力线，与原项目已无代码级关联。
+- **[chu0119/Pojun](https://github.com/chu0119/Pojun)**（破军）——七杀 fork 自其 v0.4.86。Pojun 本身
+  接手自已删除的原作者项目 [Autumn-27/ARTEX](https://github.com/Autumn-27/ARTEX)（百度“Agent+”攻防挑战赛
+  冠军项目）的最终定版 v0.3.15，并在其后独立演进了 700+ 提交。双图架构、planner/worker 编排、MITM 流量
+  代理、审批门框架与基础工具集都来自这条线——向两位作者致意。
+- **[N1nEmAn/sapper-v2](https://github.com/N1nEmAn/sapper-v2)**（MIT）——自主渗透军团，多 Agent 调度的实战
+  范本。七杀的军团调度条令（规划者内置提示词与 `legion-command` / `legion-tactics` 技能）提炼自它的指挥
+  条令与战役复盘，没有复制其代码。
+
+七杀自己的改动（军团条令的代码化、任务级收尾上限、新增任务模板）自 v1.0.0 起由本仓库维护。
+第三方声明见 [NOTICE](NOTICE)。
 
 ## 许可与免责声明
 
@@ -677,6 +728,6 @@ docs/           设计文档 / 部署手册 / 能力对照
 
 <div align="center">
 
-**破军 · Pojun** — 找到防线的破口，并把破口证明给你看。
+**七杀 · Qisha** — 把防线打穿，并把结果证明给你看。
 
 </div>

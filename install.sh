@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# POJUN 安装 / 部署脚本（唯一入口）
+# 七杀 Qisha 安装 / 部署脚本（唯一入口）
 #
 # 运行后选择部署形态，再走对应流程；也可用 --mode 直接指定。
 #
@@ -18,7 +18,7 @@
 #       Docker   cd /opt/pojun && docker compose down -v && rm -rf /opt/pojun
 set -euo pipefail
 
-REPO="chu0119/Pojun"
+REPO="Maplisky/qisha"
 INSTALL_DIR="/opt/pojun"
 SERVICE="pojun"
 RUN_USER="pojun"
@@ -50,7 +50,7 @@ die(){  printf '\033[31m[x]\033[0m %s\n' "$*" >&2; exit 1; }
 
 usage(){
   cat <<EOF
-POJUN 安装脚本
+七杀 Qisha 安装脚本
 
 用法: $0 [选项]
 
@@ -577,7 +577,7 @@ JSON
   # 注：--dir 若指向 /home 或 /root 底下，ProtectHome=true 会把它整个藏起来，需自行去掉该项。
   cat > "/etc/systemd/system/${SERVICE}.service" <<UNIT
 [Unit]
-Description=POJUN - AI Autonomous Penetration Testing System
+Description=QISHA (七杀) - AI Autonomous Penetration Testing System
 Documentation=https://github.com/${REPO}
 After=network-online.target postgresql.service
 Wants=network-online.target postgresql.service
@@ -849,7 +849,7 @@ install_hostd(){
   mv -f /usr/local/bin/.pojun-hostd.new /usr/local/bin/pojun-hostd
   cat > "/etc/systemd/system/${SERVICE}-hostd.service" <<UNIT
 [Unit]
-Description=POJUN host tool installer (privileged helper)
+Description=QISHA host tool installer (privileged helper)
 Documentation=https://github.com/${REPO}
 After=network-online.target
 Wants=network-online.target

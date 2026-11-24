@@ -1,6 +1,9 @@
-// Command pojun runs the POJUN backend: the dual SQLite graph stores,
+// Command pojun runs the QISHA (七杀) backend: the dual SQLite graph stores,
 // the event-driven exploration engine, and the JSON HTTP API consumed by the
 // shadcn/ui frontend.
+//
+// 可执行文件、安装目录、systemd 服务名与环境变量前缀沿用 pojun / POJUN_*，以便从
+// 上游 Pojun 部署原地升级；产品名与发布源自 v1.0.0 起独立为七杀 Qisha。
 package main
 
 import (
@@ -28,17 +31,18 @@ import (
 var version = "dev"
 
 const banner = `
-    _    ____ _____ _______  __
-   / \  |  _ \_   _| ____\ \/ /
-  / _ \ | |_) || | |  _|  \  /
- / ___ \|  _ < | | | |___ /  \
-/_/   \_\_| \_\|_| |_____/_/\_\
+  ___    ___   ____   _   _     _
+ / _ \ |_ _| / ___| | |_| |   / \
+| | | | | | \___ \ |  _  |  / _ \
+| |_| | | |  ___) ||_| |_| / ___ \
+ \_ _/ |___| |____/         /_/   \_\
+  |_|
 `
 
 // printBanner writes the startup banner + version/runtime info to stdout.
 func printBanner(addr string) {
 	fmt.Print(banner)
-	fmt.Println("  AI 自主渗透测试系统")
+	fmt.Println("  七杀 QISHA · AI 自主渗透测试平台")
 	fmt.Printf("  版本 %s  ·  %s/%s  ·  %s  ·  监听 %s\n\n",
 		version, runtime.GOOS, runtime.GOARCH, runtime.Version(), addr)
 }
@@ -124,7 +128,7 @@ func run() int {
 	}
 
 	go func() {
-		log.Printf("POJUN %s backend listening on %s (data=%s, workers=%d)", version, *addr, *dataDir, mgr.Workers())
+		log.Printf("QISHA %s backend listening on %s (data=%s, workers=%d)", version, *addr, *dataDir, mgr.Workers())
 		if err := httpSrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("serve: %v", err)
 		}

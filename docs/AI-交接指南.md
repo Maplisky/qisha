@@ -8,7 +8,7 @@
 
 **破军 Pojun**（`github.com/chu0119/Pojun`，2026-11-02 前名 ARTEX）是一套 **LLM 多 Agent 自主渗透测试平台**：给一句话目标，自动完成「目标拆解 → 侦察 → 漏洞挖掘 → 利用 → 后渗透 → 报告」全流程，人随时插手纠偏。
 
-- **Go 单体后端**（`github.com/chu0119/pojun`，内嵌 Next.js 静态前端 `-tags embedui`）
+- **Go 单体后端**（`github.com/Maplisky/qisha`，内嵌 Next.js 静态前端 `-tags embedui`）
 - **PostgreSQL** 是唯一持久层（schema.sql 幂等迁移）
 - Agent 引擎基于 **norma SDK**（fork：`go.mod` replace 到 `github.com/chu0119/Norma`）
 - 定位：Linux 服务器常驻部署，仅用于授权渗透测试/SRC
