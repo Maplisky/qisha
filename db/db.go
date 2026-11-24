@@ -388,6 +388,12 @@ var builtinSkillVisibility = map[string][]string{
 	// 浏览器自动化：worker 做 SPA/登录态探测时可用
 	"playwright-cli": {"pentest", "worker"},
 	"apk-reverse":    {"pentest", "worker"},
+	// 军团条令（七杀自 v1.0.0 起内置，调度思想借鉴 sapper-v2 的多 Agent 军团复盘）：
+	// 调度决策本身写在规划者内置提示词里（agent/planner.go），legion-command 是给主 Agent
+	// 的人机接口判断（何时补意图、何时停车）与查阅用的参照；执行侧两份给执行者。
+	"legion-command":  {"main"},
+	"legion-tactics":  {"main", "pentest", "worker"},
+	"strike-quickref": {"main", "pentest", "worker"},
 }
 
 // seedBuiltinSkillVisibility binds the shipped built-in skills to their default

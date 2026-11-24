@@ -96,26 +96,147 @@ var builtinTaskPlaybooks = []builtinTaskPlaybook{
 	},
 }
 
+// qishaTaskPlaybooks 是第二批内置模板（七杀 v1.0.0）。四类来源：
+//   - 黑盒·主机全权限证明：真实授权模拟——客户只给一个地址，不提供任何内部信息；
+//   - 靶场占靶·flag 集齐：VulnHub/CTF 验收向。默认模板是「渗透 + 报告」导向，目标证明一到位
+//     就收工；要把靶打全，搜索面与验收必须写明（实测教训：默认模板下 5 个 flag 只拿到 1 个）；
+//   - 快速漏洞面核对：轻量模式，明文禁止利用链与爆破，供首触资产/批量第一轮使用；
+//   - 业务逻辑与越权深挖、单机后渗透：专项场景。
+//
+// 与第一批分开成批：已部署实例的 task_playbooks_v1 早已置 done，不分批就拿不到新模板。
+var qishaTaskPlaybooks = []builtinTaskPlaybook{
+	{
+		name:        "黑盒·主机全权限证明（真实授权模拟）",
+		description: "适用：单台主机/VM 靶机的真实黑盒模拟（不提供任何内部信息）。串行：侦察→指纹→漏洞面→利用→立足点→提权→权限证明。验收以最高权限读取关键系统文件为准。",
+		goal: `对「{{目标名称}}」进行黑盒渗透测试，最终获取主机最高权限，以最高权限身份读取关键系统文件内容作为权限证明。全程不提供任何目标内部信息。
+
+【授权范围】
+- 仅 {{目标名称}} 点名主机及其开放端口；网关/第三方设备不在范围。
+- 发现的新端口/新服务属于该主机则纳入；不向外网扩展。
+
+【内部工作流（串行，自行拆解规划）】
+1. 侦察：全端口/服务识别/Web 指纹；Web 入口页面全文通读（footer/注释/robots.txt/JS 硬编码）；
+2. 漏洞面：已知组件 CVE（版本钉死后核对）、未授权面、弱口令面（≤5 组即停）；
+3. 利用与立足点：按证据逐条验证，拿到执行权限即记录；
+4. 提权：立足点后重枚举（SUID/内核版本/配置文件/计划任务/本地凭据），逐步提权至最高权限；
+5. 权限证明：以最高权限执行身份命令并读取关键系统文件（Linux 读 /etc/shadow 片段，Windows 读 SAM/等价物），保留完整输出证据。
+
+【验收标准】
+- 可利用漏洞清单（每条附最小复现证据）；
+- 最高权限证明（身份命令输出 + 关键文件内容片段）；
+- 全程流量留痕可回溯。
+
+【边界】
+- 最小伤害：不破坏服务可用性、不删改数据；卡壳按阶梯换路，不硬打。`,
+	},
+	{
+		name:        "靶场占靶·flag 集齐（CTF 验收向）",
+		description: "适用：VulnHub/CTF 靶机。验收 = 穷尽全部 flag 并逐条给出原文+位置+路径。flag 可能藏在 Web 内容、后台、数据库、各用户家目录、root 目录——部分需提权。",
+		goal: `对「{{目标名称}}」靶机完成完整占靶：发现并捕获该主机上全部 flag（数量未知，自行穷尽），逐条交付。
+
+【搜索面（按序穷举，不跳过）】
+- Web 层：入口页面全文（含 footer/注释）、登录后台内容列表、数据库表；
+- 文件系统：各用户家目录（/home/*）、/root、/tmp、Web 根目录、计划任务脚本；
+- 权限层级：www-data 级可读的、普通用户级可读的、仅 root 可读的（需提权）。
+
+【验收标准】
+- 每条 flag：原文完整抄录 + 所在文件/位置 + 获取路径（用了什么漏洞/权限）；
+- 若判断已穷尽，列出已检查的搜索面清单作为佐证。
+
+【边界】
+- 只读优先，不破坏靶机可复打性；卡壳按阶梯换路。`,
+	},
+	{
+		name:        "快速漏洞面核对（轻量·省 token）",
+		description: "适用：首触资产/日常巡检/大批量资产第一轮。只做指纹+已知 CVE 核对+未授权面，不做利用链不做爆破——单资产成本约为全流程的 1/5。深挖交给后续任务。",
+		goal: `对「{{目标名称}}」执行一轮快速漏洞面核对（轻量模式，严格控制深度与轮次）。
+
+【只做三件事】
+1. 指纹：端口/服务/框架/版本（三个独立来源交叉钉死）；
+2. 已知 CVE 核对：版本钉死后对照漏洞情报（search_vulns），命中即记 fact（注明 version_in_range）；不盲目放 payload；
+3. 未授权/信息泄露面：.git/.env/备份文件/Swagger/Actuator/目录遍历/默认口令（≤3 组即停）。
+
+【明确禁止（控制成本）】
+- 不展开利用链、不爆破、不深目录 fuzz 循环；
+- 同一资产不重复扫描；无响应 30 秒即记录转下一个；
+- 仅 critical 级发现做一次最小验证，其余记 inferred fact 即可。
+
+【验收标准】
+- 资产指纹清单（含版本与来源）；
+- 漏洞面清单（每条附版本区间/路径证据）。
+【产出去向】命中项由规划者决定是否开深挖任务。`,
+	},
+	{
+		name:        "业务逻辑与越权深挖（双身份对照）",
+		description: "适用：Web/API 业务系统（需两个不同权限的测试账号，填在任务描述里）。IDOR/水平垂直越权/支付与优惠券逻辑/批量赋值，双身份对照留证。读到非本人数据即止。",
+		goal: `对「{{目标名称}}」进行业务逻辑与越权专项测试（测试账号见任务描述：账号 A 低权限 / 账号 B 高权限）。
+
+【测试面（按序）】
+1. 认证链路：登录/注册/密码重置/改绑（凭据枚举、重置令牌可预测、验证码绕过）；
+2. 越权矩阵：对 A/B 各自可见的资源做交叉访问（水平：A 读 B 的对象；垂直：A 访问管理接口）——ID 逐项对照（用户/订单/文件/消息）；
+3. 业务逻辑：支付金额篡改/优惠券复用/积分负数/竞态（≤5 并发）/批量赋值（role/isAdmin 字段注入）；
+4. 会话与令牌：JWT 弱密钥/未验签/算法混淆、Session 固定、Token 不失效。
+
+【验收标准】
+- 每个漏洞附**对照请求对**（A 身份请求 vs 响应、B 身份或匿名请求 vs 响应，差异用流量证据绑定）；
+- 明确影响层级（读到非本人数据/替他人操作/触碰资金）。
+
+【边界】
+- 读到非本人数据即止（≤3 条样本），禁止批量拉取；不修改他人数据状态（用自身测试账号做写验证）。`,
+	},
+	{
+		name:        "单机后渗透（立足点→提权→数据）",
+		description: "适用：已持有立足点（shell/账号/凭据，见任务描述）后的深挖。信息收集→提权→凭据获取→敏感数据定位读取，全程留证。",
+		goal: `「{{目标名称}}」已持有立足点（形态见任务描述），执行单机后渗透。
+
+【内部工作流（串行）】
+1. 立足点稳定化：确认执行权限/交互方式，做只读信息收集（系统版本/补丁/网络连接/进程/计划任务）；
+2. 提权路径排查：SUID/SGID 全盘清单、内核版本对应本地提权 CVE、服务配置缺陷、可写脚本被高权执行、存储的凭据（历史文件/配置/注册表）；
+3. 逐条验证提权路径至最高权限（失败留失败输出）；
+4. 凭据与数据获取：以新权限重枚举一轮（新访问=新攻击面），提取用户凭据与敏感文件（邮件/数据库/备份/密钥）；
+5. 留证：每步身份证明（whoami/id）+ 关键文件内容片段。
+
+【验收标准】
+- 提权成功证明（前后身份对比）；
+- ≥1 组新获取凭据或敏感数据读取证据；
+- 提权失败路径清单（试过什么、为何失败）。
+
+【边界】
+- 只读取证，不植入持久化后门、不清日志、不影响服务。`,
+	},
+}
+
 // seedBuiltinTaskPlaybooks 种子内置任务模板（PentestAgent Playbook 思路落地）。
-// settings flag 记批次；插过即跳过——用户后续删除/修改不复活。
+// 每批一个 settings flag；插过即跳过——用户后续删除/修改不复活。
 func (d *DB) seedBuiltinTaskPlaybooks() error {
-	const flag = "task_playbooks_v1"
-	if v, _, _ := d.GetSetting(flag); v == "done" {
-		return nil
+	batches := []struct {
+		flag      string
+		playbooks []builtinTaskPlaybook
+	}{
+		{flag: "task_playbooks_v1", playbooks: builtinTaskPlaybooks},
+		{flag: "task_playbooks_v2", playbooks: qishaTaskPlaybooks},
 	}
-	for _, pb := range builtinTaskPlaybooks {
-		in := TaskTemplateInput{
-			Name:        pb.name,
-			Description: pb.description,
-			Goal:        pb.goal,
+	for _, batch := range batches {
+		if v, _, _ := d.GetSetting(batch.flag); v == "done" {
+			continue
 		}
-		if _, err := d.CreateTaskTemplate(in); err != nil {
-			// 已存在同名模板 = 跳过（用户可能改过内容，种子不覆盖）；其余如实返回。
-			if errors.Is(err, ErrTaskTemplateNameConflict) {
-				continue
+		for _, pb := range batch.playbooks {
+			in := TaskTemplateInput{
+				Name:        pb.name,
+				Description: pb.description,
+				Goal:        pb.goal,
 			}
-			return fmt.Errorf("playbook %q: %w", pb.name, err)
+			if _, err := d.CreateTaskTemplate(in); err != nil {
+				// 已存在同名模板 = 跳过（用户可能改过内容，种子不覆盖）；其余如实返回。
+				if errors.Is(err, ErrTaskTemplateNameConflict) {
+					continue
+				}
+				return fmt.Errorf("playbook %q: %w", pb.name, err)
+			}
+		}
+		if err := d.SetSetting(batch.flag, "done"); err != nil {
+			return err
 		}
 	}
-	return d.SetSetting(flag, "done")
+	return nil
 }
