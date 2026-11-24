@@ -113,6 +113,29 @@ func evaluateAutoFinish(round int64, idle int, active bool, coveragePct int, cfg
 	return "", "", false
 }
 
+// evaluateAutoFinishForTask 是带任务级覆盖的判定（便于单测）。override 是任务自己的规划
+// 轮数上限：nil=沿用全局 cfg.MaxRounds；0=本任务不限轮数；>0=本任务上限（可高于也可低于
+// 全局值）。空转/覆盖率判据仍只由全局配置决定。
+//
+// 全局自动收尾关闭时，只认任务显式给出的轮数上限：它是用户按任务立下的硬约定，不随全局
+// 开关失效；其余判据保持关闭。
+func evaluateAutoFinishForTask(round int64, idle int, active bool, coveragePct int, cfg autoFinishConfig, override *int) (reason, detail string, ok bool) {
+	if override != nil {
+		cfg.MaxRounds = *override
+	}
+	if !cfg.Enabled {
+		if override == nil || cfg.MaxRounds <= 0 || round < int64(cfg.MaxRounds) {
+			return "", "", false
+		}
+		return "auto_rounds", fmt.Sprintf("达到任务设置的规划轮数上限 %d", cfg.MaxRounds), true
+	}
+	reason, detail, ok = evaluateAutoFinish(round, idle, active, coveragePct, cfg)
+	if ok && reason == "auto_rounds" && override != nil {
+		detail = fmt.Sprintf("达到任务设置的规划轮数上限 %d", cfg.MaxRounds)
+	}
+	return reason, detail, ok
+}
+
 // freshDirection 判断本轮 trigger 是否包含用户新增目标/提示；是则收尾计数归零，
 // 避免刚加目标就因旧 idle 计数被收掉。
 func freshDirection(triggers []agent.TriggerEvent) bool {
@@ -133,7 +156,9 @@ func (e *Engine) recordAndEvaluateAutoFinish(t *Task, round int64, triggers []ag
 		return
 	}
 	cfg := autoFinishConfigFromPG(pg)
-	if !cfg.Enabled {
+	// 任务显式设置了规划轮数上限时，即使全局自动收尾关闭也照常记录并判定轮数；
+	// 否则全局关闭等于没有任何判据，连进度都不必记。
+	if !cfg.Enabled && (t.MaxRounds == nil || *t.MaxRounds <= 0) {
 		return
 	}
 	facts, findings, err := pg.CountExplorationProgress(t.ExpID)
@@ -170,7 +195,7 @@ func (e *Engine) recordAndEvaluateAutoFinish(t *Task, round int64, triggers []ag
 		log.Printf("[auto-finish] task %s 读取 frontier 失败，暂不判定: %v", t.ID, err)
 		return
 	}
-	reason, detail, ok := evaluateAutoFinish(round, idle, active, coveragePct, cfg)
+	reason, detail, ok := evaluateAutoFinishForTask(round, idle, active, coveragePct, cfg, t.MaxRounds)
 	if !ok {
 		return
 	}

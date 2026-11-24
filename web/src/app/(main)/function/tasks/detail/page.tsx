@@ -10,6 +10,7 @@ import { toast } from "sonner";
 
 import { StatusBadge } from "@/components/status-badge";
 import { TaskLLMProfileChain } from "@/components/task-llm-profile-chain";
+import { TaskResumeDialog } from "@/components/task-resume-dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   AlertDialog,
@@ -213,6 +214,7 @@ function TaskDetailInner() {
   const [interceptPendingCount, setInterceptPendingCount] = React.useState(0);
   const [profiles, setProfiles] = React.useState<LLMProfile[]>([]);
   const [archiving, setArchiving] = React.useState(false);
+  const [resumeOpen, setResumeOpen] = React.useState(false); // 已超时任务点「继续运行」时挂载对话框
 
   React.useEffect(() => {
     api
@@ -372,6 +374,8 @@ function TaskDetailInner() {
     archiveDisabledReason = `任务被未归档任务 #${task.archive_blocked_by_task_id} 直接继承，请先归档依赖任务`;
   }
   const engineMode = paused ? "paused" : (task.engine_mode ?? "idle");
+  // 已超时的任务可由人工继续运行：按钮变为「继续运行」，点开对话框重设上限后从当前进度复活。
+  const timedOut = task.status === "timeout";
   let controlVariant: "default" | "secondary" | "outline" = "outline";
   let controlIcon = <PauseIcon data-icon="inline-start" />;
   let controlLabel = "暂停";
@@ -379,6 +383,11 @@ function TaskDetailInner() {
     controlVariant = "secondary";
     controlIcon = <CheckIcon data-icon="inline-start" />;
     controlLabel = completed ? "已完成" : "已结束";
+    if (timedOut) {
+      controlVariant = "default";
+      controlIcon = <PlayIcon data-icon="inline-start" />;
+      controlLabel = "继续运行";
+    }
   } else if (paused) {
     controlVariant = "default";
     controlIcon = <PlayIcon data-icon="inline-start" />;
@@ -455,7 +464,13 @@ function TaskDetailInner() {
             <BotIcon className="size-4" />
             {autopilot ? "自主推进中" : "自主推进"}
           </Button>
-          <Button size="sm" variant={controlVariant} onClick={togglePause} disabled={terminal}>
+          <Button
+            size="sm"
+            variant={controlVariant}
+            onClick={timedOut ? () => setResumeOpen(true) : togglePause}
+            disabled={terminal && !timedOut}
+            title={timedOut ? "继续运行：可重设时间上限与规划轮数上限，从当前进度继续" : undefined}
+          >
             {controlIcon}
             {controlLabel}
           </Button>
@@ -517,6 +532,16 @@ function TaskDetailInner() {
           <ReportTab taskId={id} />
         </TabsContent>
       </div>
+      {resumeOpen && timedOut ? (
+        <TaskResumeDialog
+          task={task}
+          onClose={() => setResumeOpen(false)}
+          onResumed={() => {
+            setPaused(false);
+            load();
+          }}
+        />
+      ) : null}
     </Tabs>
   );
 }

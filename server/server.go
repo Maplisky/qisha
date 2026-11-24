@@ -792,6 +792,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("PATCH /api/tasks/{id}/constraints/{cid}", s.editConstraint)    // 约束管理:修改约束
 	mux.HandleFunc("DELETE /api/tasks/{id}/constraints/{cid}", s.deleteConstraint) // 约束管理:删除约束
 	mux.HandleFunc("POST /api/tasks/{id}/control", s.control)
+	mux.HandleFunc("POST /api/tasks/{id}/resume", s.resumeTask)       // 已超时任务由人工继续运行（可重设时间/轮数上限）
 	mux.HandleFunc("POST /api/tasks/{id}/autopilot", s.taskAutopilot) // 一键自主推进（开关 + 可选恢复）
 	mux.HandleFunc("PUT /api/tasks/{id}/llm", s.updateTaskLLMProfiles)
 	mux.HandleFunc("GET /api/tasks/{id}/llm/resolution", s.taskLLMResolutionHandler)
@@ -1640,6 +1641,7 @@ type createTaskReq struct {
 	SourceTaskIDs        []string `json:"source_task_ids,omitempty"`   // 仅直接、只读继承的来源任务
 	CompanyIDs           []int64  `json:"company_ids,omitempty"`       // 关联企业范围并快照关联当前企业资产;不复制资产或强制生成意图
 	TimeoutSeconds       int      `json:"timeout_seconds"`             // 任务级超时(秒);0/省略=不限时
+	MaxRounds            *int     `json:"max_rounds,omitempty"`        // 任务级规划轮数上限;省略/null=沿用系统设置,0=不限,正整数=本任务上限(与时间上限相互独立)
 	PlanHeartbeatSeconds int      `json:"plan_heartbeat_seconds"`      // planner 心跳触发间隔(秒);0/省略=默认600(10min);下限=默认=600,低于自动抬到600
 	SeedFirstIntent      *bool    `json:"seed_first_intent,omitempty"` // 创建时直接下发一条种子意图(内容=描述+目标),让 worker 免等首轮 planner 直接开跑;省略/null=默认关闭,走标准先规划再执行。显式传 true 才开(CTF 常一 work 解决时可省掉开跑前的 planner 轮)。
 	CoverageEnabled      *bool    `json:"coverage_enabled,omitempty"`  // 资产覆盖度功能;省略/null=默认开(true)。false=关闭覆盖度计算/展示/自动累积范围+隐藏 add_task_scope/list_untested_assets。company 关联不受影响。
@@ -1668,6 +1670,10 @@ func (s *Server) createTask(w http.ResponseWriter, r *http.Request) {
 	}
 	if req.TimeoutSeconds < 0 {
 		req.TimeoutSeconds = 0
+	}
+	if req.MaxRounds != nil && (*req.MaxRounds < 0 || *req.MaxRounds > db.MaxTaskRoundsLimit) {
+		writeErr(w, 400, fmt.Sprintf("规划轮数上限必须在 0–%d 之间（0=不限）", db.MaxTaskRoundsLimit))
+		return
 	}
 	if len(req.SourceTaskIDs) > db.MaxTaskSourceCount {
 		writeErr(w, 400, fmt.Sprintf("关联任务最多选择 %d 个", db.MaxTaskSourceCount))
@@ -1709,6 +1715,7 @@ func (s *Server) createTask(w http.ResponseWriter, r *http.Request) {
 		Name: strings.TrimSpace(req.Name), CategoryID: req.CategoryID,
 		SourceTaskIDs: sourceIDs, CompanyIDs: req.CompanyIDs, LLMProfileIDs: req.LLMProfileIDs,
 		TimeoutSeconds: req.TimeoutSeconds, PlanHeartbeatSeconds: req.PlanHeartbeatSeconds,
+		MaxRounds:       req.MaxRounds,
 		CoverageEnabled: req.CoverageEnabled,
 		InterceptRules:  interceptRules,
 		AuthConfig:      req.AuthConfig,

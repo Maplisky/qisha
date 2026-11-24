@@ -310,6 +310,7 @@ export const api = {
     sourceTaskIds?: string[];
     companyIds?: number[];
     timeoutSeconds?: number;
+    maxRounds?: number | null; // 任务级规划轮数上限；null/缺省=沿用系统设置，0=不限
     seedFirstIntent?: boolean;
     planHeartbeatSeconds?: number;
     coverageEnabled?: boolean;
@@ -325,6 +326,7 @@ export const api = {
       source_task_ids: input.sourceTaskIds ?? [],
       company_ids: input.companyIds ?? [],
       timeout_seconds: input.timeoutSeconds ?? 0,
+      max_rounds: input.maxRounds ?? null,
       seed_first_intent: input.seedFirstIntent ?? false,
       plan_heartbeat_seconds: input.planHeartbeatSeconds ?? 0, // 0 = 后端归一到默认 600(10min)
       coverage_enabled: input.coverageEnabled ?? true, // 默认开;false=关闭资产覆盖度功能
@@ -371,6 +373,14 @@ export const api = {
   deleteTask: (id: string, options: DeleteTaskOptions) => del<DeleteTaskResult>(`/tasks/${id}`, options),
   controlTask: (id: string, action: "pause" | "resume") =>
     post<{ id: string; paused: boolean; queued: boolean; status: string }>(`/tasks/${id}/control`, { action }),
+  // 让已超时的任务继续运行。只传要改的上限：timeoutSeconds 省略=沿用原值(0=不限时)；
+  // maxRounds 省略=沿用原值，null=改回沿用系统设置，0=不限。
+  resumeTask: (id: string, input: { timeoutSeconds?: number; maxRounds?: number | null }) => {
+    const body: { timeout_seconds?: number; max_rounds?: number | null } = {};
+    if (input.timeoutSeconds !== undefined) body.timeout_seconds = input.timeoutSeconds;
+    if (input.maxRounds !== undefined) body.max_rounds = input.maxRounds;
+    return post<{ id: string; queued: boolean; status: string }>(`/tasks/${id}/resume`, body);
+  },
   setTaskAutopilot: (id: string, enabled: boolean, resume: boolean) =>
     post<{ ok: boolean; autopilot: boolean; resumed: boolean; status: string }>(`/tasks/${id}/autopilot`, { enabled, resume }),
   controlTasksBatch: (taskIds: string[], action: "pause" | "resume") =>

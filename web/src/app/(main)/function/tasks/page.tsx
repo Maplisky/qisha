@@ -48,6 +48,8 @@ import { AssetInterceptRulesEditor } from "@/components/asset-intercept-rules-ed
 import { StatusBadge } from "@/components/status-badge";
 import { TablePagination } from "@/components/table-pagination";
 import { TaskLLMProfileChain } from "@/components/task-llm-profile-chain";
+import { MAX_TASK_ROUNDS_LIMIT, parseLimitInput, roundsInheritHint, useGlobalMaxRounds } from "@/components/task-limits";
+import { TaskResumeDialog } from "@/components/task-resume-dialog";
 import { TaskTemplateControls } from "@/components/task-template-controls";
 import {
   AlertDialog,
@@ -602,6 +604,14 @@ export default function TasksPage() {
     [load],
   );
 
+  // resumeTarget 非空时挂载「继续运行」对话框：已超时的任务从这里重设上限并复活。
+  const [resumeTarget, setResumeTarget] = React.useState<Task | null>(null);
+  const taskResumed = React.useCallback(() => {
+    // 与 controlTask 同理：清空 lastRef 让下一次轮询照单接收状态变化。
+    lastRef.current = "";
+    load();
+  }, [load]);
+
   const renameTask = React.useCallback(
     async (task: Task, name: string) => {
       try {
@@ -948,6 +958,9 @@ export default function TasksPage() {
                 onCreated={refreshCategoriesAndTasks}
                 onCategoriesChanged={refreshCategoriesAndTasks}
               />
+              {resumeTarget ? (
+                <TaskResumeDialog task={resumeTarget} onClose={() => setResumeTarget(null)} onResumed={taskResumed} />
+              ) : null}
             </div>
 
             {tasks.length === 0 ? (
@@ -984,6 +997,7 @@ export default function TasksPage() {
                       nowSec={task.status === "running" ? nowSec : 0}
                       onDelete={deleteTask}
                       onControl={controlTask}
+                      onResume={setResumeTarget}
                       onRename={renameTask}
                       onTogglePinned={toggleTaskPinned}
                       onArchive={queueTaskArchive}
@@ -1057,6 +1071,7 @@ export default function TasksPage() {
                       nowSec={task.status === "running" ? nowSec : 0}
                       onDelete={deleteTask}
                       onControl={controlTask}
+                      onResume={setResumeTarget}
                       onRename={renameTask}
                       onTogglePinned={toggleTaskPinned}
                       onArchive={queueTaskArchive}
@@ -1233,6 +1248,7 @@ const TaskRow = React.memo(function TaskRow({
   nowSec,
   onDelete,
   onControl,
+  onResume,
   onRename,
   onTogglePinned,
   onArchive,
@@ -1243,6 +1259,7 @@ const TaskRow = React.memo(function TaskRow({
   nowSec: number;
   onDelete: (id: string, options: DeleteTaskOptions) => Promise<void>;
   onControl: (id: string, action: "pause" | "resume") => Promise<void>;
+  onResume: (task: Task) => void;
   onRename: (task: Task, name: string) => Promise<void>;
   onTogglePinned: (task: Task) => Promise<void>;
   onArchive: (task: Task) => Promise<void>;
@@ -1375,7 +1392,7 @@ const TaskRow = React.memo(function TaskRow({
               <EyeIcon />
             </Link>
           </Button>
-          <TaskControlButton task={task} onControl={onControl} />
+          <TaskControlButton task={task} onControl={onControl} onResume={onResume} />
           <TaskPinAction task={task} onTogglePinned={onTogglePinned} />
           <TaskArchiveAction task={task} onArchive={onArchive} />
           <DeleteTaskDialog task={task} onDelete={onDelete} />
@@ -1393,6 +1410,7 @@ function TaskMobileCard({
   nowSec,
   onDelete,
   onControl,
+  onResume,
   onRename,
   onTogglePinned,
   onArchive,
@@ -1403,6 +1421,7 @@ function TaskMobileCard({
   nowSec: number;
   onDelete: (id: string, options: DeleteTaskOptions) => Promise<void>;
   onControl: (id: string, action: "pause" | "resume") => Promise<void>;
+  onResume: (task: Task) => void;
   onRename: (task: Task, name: string) => Promise<void>;
   onTogglePinned: (task: Task) => Promise<void>;
   onArchive: (task: Task) => Promise<void>;
@@ -1485,7 +1504,7 @@ function TaskMobileCard({
             <EyeIcon />
           </Link>
         </Button>
-        <TaskControlButton task={task} onControl={onControl} />
+        <TaskControlButton task={task} onControl={onControl} onResume={onResume} />
         <TaskPinAction task={task} onTogglePinned={onTogglePinned} />
         <TaskArchiveAction task={task} onArchive={onArchive} />
         <DeleteTaskDialog task={task} onDelete={onDelete} />
@@ -1634,24 +1653,36 @@ function taskControlIcon(pending: boolean, action: "pause" | "resume" | null) {
 
 // TaskControlButton 是行内的暂停/继续开关。终态任务渲染为 disabled 而不是隐藏,
 // 这样各行操作列宽度一致,按钮位置不会随状态跳动。
+// 例外:已超时的任务可以由人工继续运行——按钮变为「继续运行」,点开对话框重设上限后复活。
 function TaskControlButton({
   task,
   onControl,
+  onResume,
 }: {
   task: Task;
   onControl: (id: string, action: "pause" | "resume") => Promise<void>;
+  onResume: (task: Task) => void;
 }) {
   const [pending, setPending] = React.useState(false);
-  const action = taskControlAction(task.status);
-  const label = action === "resume" ? "继续任务" : "暂停任务";
+  const timedOut = task.status === "timeout";
+  const action = timedOut ? "resume" : taskControlAction(task.status);
+  // 三态文案分开写而非嵌套三元:仓库 Biome 基线禁 noNestedTernary。
+  let label = "暂停任务";
+  if (timedOut) label = "继续运行";
+  else if (action === "resume") label = "继续任务";
+  const title = timedOut ? "继续运行：可重设时间上限与规划轮数上限" : label;
   return (
     <Button
       size="icon"
       variant="ghost"
       aria-label={label}
-      title={action ? label : "该状态不可暂停或继续"}
-      disabled={!action || pending}
+      title={action ? title : "该状态不可暂停或继续"}
+      disabled={(!action && !timedOut) || pending}
       onClick={async () => {
+        if (timedOut) {
+          onResume(task);
+          return;
+        }
         if (!action) return;
         setPending(true);
         try {
@@ -3286,6 +3317,8 @@ function CreateTaskSheet({
   const [llmProfileIDs, setLLMProfileIDs] = React.useState<string[]>([]);
   const [creating, setCreating] = React.useState(false);
   const [timeoutMin, setTimeoutMin] = React.useState(""); // 任务级超时(分钟);空/0 = 不限时
+  const [maxRounds, setMaxRounds] = React.useState(""); // 任务级规划轮数上限;空=沿用系统设置,0=不限
+  const globalMaxRounds = useGlobalMaxRounds();
   const [heartbeatMin, setHeartbeatMin] = React.useState("10"); // planner 心跳(分钟);默认10,下限10(与后端一致)
   const [seedFirstIntent, setSeedFirstIntent] = React.useState(false); // 创建时下发种子意图,worker 免等首轮 planner 直接开跑;默认关闭,走标准先规划再执行
   const [coverageEnabled, setCoverageEnabled] = React.useState(true); // 资产覆盖度功能;默认开。关闭=不计算/展示覆盖度、不累积范围、隐藏范围类工具(company 关联不受影响)
@@ -3354,6 +3387,11 @@ function CreateTaskSheet({
       toast.error(`最多关联 ${MAX_SOURCE_TASKS} 个来源任务`);
       return;
     }
+    const roundsLimit = parseLimitInput(maxRounds);
+    if (roundsLimit === undefined || (roundsLimit !== null && roundsLimit > MAX_TASK_ROUNDS_LIMIT)) {
+      toast.error(`规划轮数上限必须是 0–${MAX_TASK_ROUNDS_LIMIT} 的整数（留空 = 沿用系统设置，0 = 不限）`);
+      return;
+    }
     setCreating(true);
     try {
       const timeoutSec = Math.max(0, Math.floor(Number(timeoutMin) || 0)) * 60;
@@ -3367,6 +3405,7 @@ function CreateTaskSheet({
         sourceTaskIds: sourceTaskIDs,
         companyIds: companyIDs,
         timeoutSeconds: timeoutSec,
+        maxRounds: roundsLimit,
         seedFirstIntent,
         planHeartbeatSeconds: heartbeatSec,
         coverageEnabled,
@@ -3387,6 +3426,7 @@ function CreateTaskSheet({
       setCompanyIDs([]);
       setLLMProfileIDs([]);
       setTimeoutMin("");
+      setMaxRounds("");
       setHeartbeatMin("10");
       setSeedFirstIntent(false);
       setCoverageEnabled(true);
@@ -3636,7 +3676,7 @@ function CreateTaskSheet({
               <CollapsibleTrigger className="group flex w-full items-center gap-2 border-t pt-4 font-medium text-sm">
                 <ChevronRightIcon className="size-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-90" />
                 高级设置
-                <span className="ml-auto font-normal text-muted-foreground text-xs">超时 · 心跳 · 首个意图</span>
+                <span className="ml-auto font-normal text-muted-foreground text-xs">超时 · 轮数上限 · 心跳 · 首个意图</span>
               </CollapsibleTrigger>
               <CollapsibleContent className="grid gap-5 pt-5">
                 <div className="grid gap-2">
@@ -3651,7 +3691,25 @@ function CreateTaskSheet({
                     onChange={(e) => setTimeoutMin(e.target.value)}
                   />
                   <p className="text-muted-foreground text-xs">
-                    到点后触发优雅收尾（各 agent 写回 + planner 终局判定），任务进入 timeout 终态。
+                    到点后触发优雅收尾（各 agent 写回 + planner 终局判定），任务进入 timeout
+                    终态；之后可由人工「继续运行」并重设上限。
+                  </p>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="max-rounds">规划轮数上限（可选）</Label>
+                  <Input
+                    id="max-rounds"
+                    type="number"
+                    min={0}
+                    max={MAX_TASK_ROUNDS_LIMIT}
+                    className="w-40"
+                    placeholder="留空 = 沿用系统设置"
+                    value={maxRounds}
+                    onChange={(e) => setMaxRounds(e.target.value)}
+                  />
+                  <p className="text-muted-foreground text-xs">
+                    {roundsInheritHint(globalMaxRounds)}
+                    ；填 0 = 不限。规划轮数是规划者被唤醒做决策的次数，达到上限同样会收尾并记为超时——长时间没有新结果但仍在推进的任务，可在这里单独放宽。
                   </p>
                 </div>
                 <div className="grid gap-2">

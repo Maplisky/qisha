@@ -61,6 +61,8 @@ type TaskDTO struct {
 	ArchiveBlockedBy   string             `json:"archive_blocked_by_task_id,omitempty"`
 	CompanyIDs         []int64            `json:"company_ids"`
 	CoverageEnabled    bool               `json:"coverage_enabled"` // 资产覆盖度功能开关(创建时定)
+	TimeoutSeconds     int                `json:"timeout_seconds"`  // 任务级时间上限(秒);0=不限时
+	MaxRounds          *int               `json:"max_rounds"`       // 任务级规划轮数上限;null=沿用系统设置,0=不限
 }
 
 // FindingSeverityDTO 是任务列表里按严重度分档的漏洞计数（严重/高/中/低）。
@@ -134,6 +136,8 @@ func taskDTO(t *Task, status string) TaskDTO {
 		SourceTaskIDs:      sourceIDs,
 		CompanyIDs:         lifecycle.CompanyIDs,
 		CoverageEnabled:    t.CoverageEnabled,
+		TimeoutSeconds:     t.TimeoutSeconds,
+		MaxRounds:          t.MaxRounds,
 	}
 }
 
@@ -196,15 +200,15 @@ type TaskNodeDTO struct {
 
 func taskNodeDTO(n *db.Node) TaskNodeDTO {
 	d := TaskNodeDTO{
-		ID:           i64s(n.ID),
-		Type:         n.Kind,
-		Payload:      rawString(n.Payload),
-		DeleteReason: n.DeleteReason,
+		ID:            i64s(n.ID),
+		Type:          n.Kind,
+		Payload:       rawString(n.Payload),
+		DeleteReason:  n.DeleteReason,
 		BlockedReason: n.BlockedReason,
-		Priority:     n.Priority,
-		State:        n.State,
-		Origin:       n.Origin,
-		TS:           rfc3339(n.CreatedAt),
+		Priority:      n.Priority,
+		State:         n.State,
+		Origin:        n.Origin,
+		TS:            rfc3339(n.CreatedAt),
 	}
 	if n.SourceTaskID > 0 {
 		d.SourceTaskID = i64s(n.SourceTaskID)
@@ -243,8 +247,8 @@ func goalDTO(n *db.Node) GoalDTO {
 		Unverified:       p.Unverified,
 		UnverifiedReason: p.UnverifiedReason,
 		State:            n.State,
-		Origin:    n.Origin,
-		TS:        rfc3339(n.CreatedAt),
+		Origin:           n.Origin,
+		TS:               rfc3339(n.CreatedAt),
 	}
 }
 

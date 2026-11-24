@@ -61,6 +61,7 @@ type Task struct {
 	// 任务级超时(见 docs/任务级超时与收尾设计.md)。DeadlineAt/FirstRunAt 为 unix 秒,0=未设/未运行。
 	TimeoutSeconds       int                    `json:"timeout_seconds"`
 	PlanHeartbeatSeconds int                    `json:"plan_heartbeat_seconds"` // planner 心跳触发间隔(秒)
+	MaxRounds            *int                   `json:"max_rounds"`             // 任务级规划轮数上限;nil=沿用全局设置,0=不限
 	CoverageEnabled      bool                   `json:"coverage_enabled"`       // 资产覆盖度功能开关(创建时定,默认开)
 	FirstRunAt           int64                  `json:"first_run_at,omitempty"`
 	DeadlineAt           int64                  `json:"deadline_at,omitempty"`
@@ -1241,12 +1242,38 @@ func taskFromPG(pt *pgdb.Task, store *pgdb.ExplorationStore, ic *intercept.Inter
 		SourceTaskIDs:  append([]int64(nil), pt.SourceTaskIDs...),
 		CompanyIDs:     append([]int64(nil), pt.CompanyIDs...),
 		TimeoutSeconds: pt.TimeoutSeconds, PlanHeartbeatSeconds: pt.PlanHeartbeatSeconds,
+		MaxRounds:       pt.MaxRounds,
 		CoverageEnabled: pt.CoverageEnabled,
 		FirstRunAt:      unixOrZero(pt.FirstRunAt), DeadlineAt: unixOrZero(pt.DeadlineAt),
 		Store: store, Guard: guard.NewWithInterceptor(ic), notify: make(chan struct{}, 1),
 	}
 	t.autopilot.Store(pt.Autopilot)
 	return t
+}
+
+// SetTaskLimits 更新任务的时间上限与规划轮数上限，并同步到运行时句柄。语义与
+// pgdb.SetTaskLimits 一致：timeoutSeconds=nil 不改时间上限；maxRounds 仅在 maxRoundsSet
+// 时写入（nil=改回沿用全局设置，0=不限）。已盖章的 deadline 不受影响，新上限到下一次
+// 盖章才生效——「继续运行」走的终态复活会清掉旧章、按新值重新盖一整套预算。
+func (m *Manager) SetTaskLimits(taskID string, timeoutSeconds, maxRounds *int, maxRoundsSet bool) (*Task, error) {
+	m.taskStateMu.Lock()
+	defer m.taskStateMu.Unlock()
+	id, err := strconv.ParseInt(taskID, 10, 64)
+	if err != nil || id <= 0 {
+		return nil, nil
+	}
+	updated, err := m.pg.SetTaskLimits(id, timeoutSeconds, maxRounds, maxRoundsSet)
+	if err != nil || updated == nil {
+		return nil, err
+	}
+	m.mu.Lock()
+	task := m.tasks[taskID]
+	if task != nil {
+		task.TimeoutSeconds = updated.TimeoutSeconds
+		task.MaxRounds = updated.MaxRounds
+	}
+	m.mu.Unlock()
+	return task, nil
 }
 
 // UpdateTaskMetadata changes list-only task metadata without interrupting any

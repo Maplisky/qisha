@@ -548,6 +548,9 @@ CREATE TRIGGER trg_tasks_upd BEFORE UPDATE ON tasks
     FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 -- planner 心跳触发间隔(秒);补旧库。默认 300s(5min)。见 docs/planner-trigger-impl-plan.md
 ALTER TABLE tasks ADD COLUMN IF NOT EXISTS plan_heartbeat_seconds INTEGER NOT NULL DEFAULT 300;
+-- 任务级规划轮数上限;补旧库。NULL(默认)=沿用全局 auto_finish_max_rounds;0=不限;>0=本任务上限。
+-- 与 timeout_seconds(墙钟上限)相互独立:长时间没有产出但仍在推进的任务,可以只放宽轮数而保持时间预算。
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS max_rounds INTEGER;
 -- 并发上限挂起态;补旧库。true=因并发上限排队、等待空位自动启动。
 ALTER TABLE tasks ADD COLUMN IF NOT EXISTS queued BOOLEAN NOT NULL DEFAULT false;
 -- 资产覆盖度功能开关;补旧库。true(默认)=计算/展示测试覆盖度、自动累积测试范围、

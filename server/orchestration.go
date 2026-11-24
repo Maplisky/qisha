@@ -42,7 +42,7 @@ func (s *Server) hostTools() ([]actool.CoreTool, map[string][]string) {
 	tools = append(tools, s.orchestrationTools()...)
 	tools = append(tools, s.findingRetestTools()...)
 	tools = append(tools, s.platformTools()...) // 平台操作工具(建改 skill/工具/MCP，给 Auto 用)
-	tools = append(tools, s.proxyTools()...)     // 代理池：状态查询 + 坏出口上报
+	tools = append(tools, s.proxyTools()...)    // 代理池：状态查询 + 坏出口上报
 	custom, err := s.customTools()
 	if err != nil {
 		log.Printf("[custom-tool] 加载失败: %v", err)
@@ -252,6 +252,7 @@ func (s *Server) toolSpawnTask() actool.CoreTool {
 			"source_task_ids":        map[string]any{"type": "array", "items": map[string]any{"type": "string"}, "description": fmt.Sprintf("可选：只读继承的来源任务 id 列表(最多 %d 个)。子任务可只读引用这些任务已探明的资产/结论作为起点；与 parent_ref 的纯父子指针不同，这是内容继承。", db.MaxTaskSourceCount)},
 			"llm_profile_id":         map[string]any{"type": "integer", "description": "可选：指定本子任务 planner/worker 用的 LLM 配置 id(见 list_llm_profiles)；留空则继承父任务、再回退全局激活配置"},
 			"timeout_seconds":        map[string]any{"type": "integer", "description": "可选：任务级超时(秒)。到点后触发优雅收尾并进入 timeout 终态；留空或 0 = 不限时"},
+			"max_rounds":             map[string]any{"type": "integer", "description": "可选：本任务的规划轮数上限。留空 = 沿用系统设置；0 = 不限。与 timeout_seconds 相互独立——长时间没有产出但仍在推进的任务，可只放宽轮数"},
 			"plan_heartbeat_seconds": map[string]any{"type": "integer", "description": "可选：planner 心跳触发间隔(秒)。距上轮规划结束/任务开始满该值且期间无触发 → 触发一轮规划(兜底死锁 + 唤醒去监督飞行中的 worker)。留空或 0 = 默认 600(10min)；"},
 			"seed_first_intent":      map[string]any{"type": "boolean", "description": "可选：对于简单任务可开启，创建时直接下发一条种子意图(内容=描述+目标)让 worker 免等首轮 planner 直接开跑测试；默认 false(走标准先规划再执行)。"},
 		}, "description", "goal"),
@@ -263,6 +264,7 @@ func (s *Server) toolSpawnTask() actool.CoreTool {
 				SourceTaskIDs        []string        `json:"source_task_ids"`
 				LLMProfileID         json.RawMessage `json:"llm_profile_id"`
 				TimeoutSeconds       int             `json:"timeout_seconds"`
+				MaxRounds            *int            `json:"max_rounds"`
 				PlanHeartbeatSeconds int             `json:"plan_heartbeat_seconds"`
 				SeedFirstIntent      bool            `json:"seed_first_intent"`
 			}
@@ -313,6 +315,7 @@ func (s *Server) toolSpawnTask() actool.CoreTool {
 				SourceTaskIDs:        sourceIDs,
 				LLMProfileIDs:        llmIDs,
 				TimeoutSeconds:       a.TimeoutSeconds,
+				MaxRounds:            a.MaxRounds,
 				PlanHeartbeatSeconds: a.PlanHeartbeatSeconds,
 			})
 			if err != nil {

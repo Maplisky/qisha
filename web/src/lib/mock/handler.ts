@@ -1506,6 +1506,19 @@ function route(m: string, path: string, seg: string[], q: URLSearchParams, b: Re
     const task = mockTasks.find((item) => item.id === seg[1]);
     return { id: seg[1], paused: Boolean(task?.paused), queued: Boolean(task?.queued), status: task?.status ?? "" };
   }
+  // 已超时任务由人工继续运行：只改请求里给出的上限，然后把任务拉回运行态（与后端 resumeTask 对齐）。
+  if (seg[0] === "tasks" && seg.length === 3 && seg[2] === "resume" && m === "POST") {
+    const task = mockTasks.find((item) => item.id === seg[1]);
+    if (!task) throw new Error("任务不存在");
+    if (task.status !== "timeout") throw new Error("仅已超时的任务可以继续运行");
+    const input = (b ?? {}) as { timeout_seconds?: number; max_rounds?: number | null };
+    if (input.timeout_seconds !== undefined) task.timeout_seconds = input.timeout_seconds;
+    if (input.max_rounds !== undefined) task.max_rounds = input.max_rounds;
+    task.status = "running";
+    task.paused = false;
+    task.queued = false;
+    return { id: task.id, queued: false, status: "running" };
+  }
   if (seg[0] === "tasks" && seg[2] === "chat" && seg[3] === "status") return { running: false };
   if (seg[0] === "tasks" && seg[2] === "chat" && seg[3] === "stop") return { status: "stopped" };
   if (path === "/active") {
