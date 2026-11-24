@@ -3,7 +3,7 @@ package intercept
 import (
 	"testing"
 
-	"github.com/chu0119/pojun/db"
+	"github.com/Maplisky/qisha/db"
 )
 
 // 规则级适用工具：同一段文字出现在写文件工具的正文里是数据，出现在 shell 工具的

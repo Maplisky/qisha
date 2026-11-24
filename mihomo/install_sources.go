@@ -15,7 +15,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/chu0119/pojun/proxyprobe"
+	"github.com/Maplisky/qisha/proxyprobe"
 )
 
 // 本文件是 mihomo 的「替代安装源」：GitHub Release 资产在很多生产/客户网络里

@@ -14,9 +14,9 @@ import (
 
 	"github.com/Autumn-27/norma/skill"
 	actool "github.com/Autumn-27/norma/tool"
-	"github.com/chu0119/pojun/agent"
-	"github.com/chu0119/pojun/db"
-	"github.com/chu0119/pojun/traffic"
+	"github.com/Maplisky/qisha/agent"
+	"github.com/Maplisky/qisha/db"
+	"github.com/Maplisky/qisha/traffic"
 )
 
 // wireAgentAugment connects the PG agent_visibility table into the agent runtime:

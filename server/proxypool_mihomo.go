@@ -14,8 +14,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/chu0119/pojun/mihomo"
-	"github.com/chu0119/pojun/traffic"
+	"github.com/Maplisky/qisha/mihomo"
+	"github.com/Maplisky/qisha/traffic"
 )
 
 const settingProxyMihomoPath = "proxypool_mihomo_path"

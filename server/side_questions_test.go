@@ -14,9 +14,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/chu0119/pojun/agent"
-	"github.com/chu0119/pojun/db"
-	"github.com/chu0119/pojun/sidequestion"
+	"github.com/Maplisky/qisha/agent"
+	"github.com/Maplisky/qisha/db"
+	"github.com/Maplisky/qisha/sidequestion"
 	"github.com/Autumn-27/norma/harness"
 	"github.com/Autumn-27/norma/llm"
 )

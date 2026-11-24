@@ -12,9 +12,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/chu0119/pojun/egress"
-	"github.com/chu0119/pojun/traffic"
-	"github.com/chu0119/pojun/vault"
+	"github.com/Maplisky/qisha/egress"
+	"github.com/Maplisky/qisha/traffic"
+	"github.com/Maplisky/qisha/vault"
 )
 
 const settingSSHProviders = "egress_ssh_providers"

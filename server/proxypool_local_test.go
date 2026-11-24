@@ -3,7 +3,7 @@ package server
 import (
 	"testing"
 
-	"github.com/chu0119/pojun/traffic"
+	"github.com/Maplisky/qisha/traffic"
 )
 
 func TestParseLocalPorts(t *testing.T) {

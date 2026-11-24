@@ -7,8 +7,8 @@ import (
 
 	actool "github.com/Autumn-27/norma/tool"
 
-	"github.com/chu0119/pojun/agent"
-	"github.com/chu0119/pojun/db"
+	"github.com/Maplisky/qisha/agent"
+	"github.com/Maplisky/qisha/db"
 )
 
 type toolUsageRecorder interface {

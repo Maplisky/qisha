@@ -17,7 +17,7 @@ import (
 
 	"github.com/Autumn-27/norma/hook"
 	actool "github.com/Autumn-27/norma/tool"
-	"github.com/chu0119/pojun/intercept"
+	"github.com/Maplisky/qisha/intercept"
 )
 
 // AuditEntry records one gated tool call.

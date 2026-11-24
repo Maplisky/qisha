@@ -30,7 +30,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/chu0119/pojun/traffic"
+	"github.com/Maplisky/qisha/traffic"
 	"gopkg.in/yaml.v3"
 )
 

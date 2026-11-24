@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/chu0119/pojun/db"
+	"github.com/Maplisky/qisha/db"
 )
 
 // 诊断包 v2 必须能真正导出 findings（v1 的 COALESCE(bigint,”) 会让它恒为 []）。

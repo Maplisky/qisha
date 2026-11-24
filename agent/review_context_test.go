@@ -7,9 +7,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/chu0119/pojun/db"
-	"github.com/chu0119/pojun/guard"
-	"github.com/chu0119/pojun/intercept"
+	"github.com/Maplisky/qisha/db"
+	"github.com/Maplisky/qisha/guard"
+	"github.com/Maplisky/qisha/intercept"
 	"github.com/Autumn-27/norma/llm"
 	"github.com/Autumn-27/norma/tool"
 )

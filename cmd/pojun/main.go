@@ -16,11 +16,11 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/chu0119/pojun/agent"
-	"github.com/chu0119/pojun/config"
-	"github.com/chu0119/pojun/selfupdate"
-	"github.com/chu0119/pojun/server"
-	"github.com/chu0119/pojun/traffic"
+	"github.com/Maplisky/qisha/agent"
+	"github.com/Maplisky/qisha/config"
+	"github.com/Maplisky/qisha/selfupdate"
+	"github.com/Maplisky/qisha/server"
+	"github.com/Maplisky/qisha/traffic"
 )
 
 // version is the build version, injected at release time via

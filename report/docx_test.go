@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/chu0119/pojun/db"
+	"github.com/Maplisky/qisha/db"
 )
 
 func TestDocxStructure(t *testing.T) {

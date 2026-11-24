@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/chu0119/pojun/db"
+	"github.com/Maplisky/qisha/db"
 )
 
 const maxWorkerMessageBytes = 64 << 10

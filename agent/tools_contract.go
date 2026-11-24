@@ -10,7 +10,7 @@ import (
 
 	actool "github.com/Autumn-27/norma/tool"
 
-	"github.com/chu0119/pojun/intercept"
+	"github.com/Maplisky/qisha/intercept"
 )
 
 // API 契约枚举工具：从目标暴露的 OpenAPI/Swagger/Postman 契约文件里读出

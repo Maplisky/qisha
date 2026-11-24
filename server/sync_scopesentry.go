@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/chu0119/pojun/db"
-	"github.com/chu0119/pojun/mcphttp"
+	"github.com/Maplisky/qisha/db"
+	"github.com/Maplisky/qisha/mcphttp"
 )
 
 // 资产同步（ScopeSentry 数据源）。

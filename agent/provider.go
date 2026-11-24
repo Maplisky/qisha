@@ -25,7 +25,7 @@ import (
 	"github.com/Autumn-27/norma/llm"
 	acperm "github.com/Autumn-27/norma/permission"
 	"github.com/Autumn-27/norma/transcript"
-	"github.com/chu0119/pojun/llmrec"
+	"github.com/Maplisky/qisha/llmrec"
 )
 
 // Config describes the LLM backend resolved from the environment.

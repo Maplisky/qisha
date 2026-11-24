@@ -13,10 +13,10 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/chu0119/pojun/agent"
-	"github.com/chu0119/pojun/db"
-	"github.com/chu0119/pojun/intercept"
-	"github.com/chu0119/pojun/sidequestion"
+	"github.com/Maplisky/qisha/agent"
+	"github.com/Maplisky/qisha/db"
+	"github.com/Maplisky/qisha/intercept"
+	"github.com/Maplisky/qisha/sidequestion"
 )
 
 const (

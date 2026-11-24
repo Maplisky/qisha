@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/chu0119/pojun/db"
+	"github.com/Maplisky/qisha/db"
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 

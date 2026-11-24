@@ -17,10 +17,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/chu0119/pojun/hostd"
-	"github.com/chu0119/pojun/hosttools"
-	"github.com/chu0119/pojun/proxyprobe"
-	"github.com/chu0119/pojun/selfupdate"
+	"github.com/Maplisky/qisha/hostd"
+	"github.com/Maplisky/qisha/hosttools"
+	"github.com/Maplisky/qisha/proxyprobe"
+	"github.com/Maplisky/qisha/selfupdate"
 )
 
 // 默认 socket 路径,与 hostd 单元里的 -socket 一致;可用环境变量覆盖。

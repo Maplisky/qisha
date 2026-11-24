@@ -9,7 +9,7 @@ import (
 
 	actool "github.com/Autumn-27/norma/tool"
 
-	"github.com/chu0119/pojun/db"
+	"github.com/Maplisky/qisha/db"
 	"os"
 	"path/filepath"
 )

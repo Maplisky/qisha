@@ -13,8 +13,8 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/chu0119/pojun/hostd"
-	"github.com/chu0119/pojun/hosttools"
+	"github.com/Maplisky/qisha/hostd"
+	"github.com/Maplisky/qisha/hosttools"
 )
 
 // startFakeHostd 在临时 unix socket 上起一个最小 hostd 替身：

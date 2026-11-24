@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/chu0119/pojun/config"
+	"github.com/Maplisky/qisha/config"
 	"github.com/jackc/pgx/v5/pgconn"
 	_ "github.com/jackc/pgx/v5/stdlib" // pgx database/sql driver ("pgx")
 )

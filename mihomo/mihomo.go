@@ -33,7 +33,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/chu0119/pojun/proxyprobe"
+	"github.com/Maplisky/qisha/proxyprobe"
 	"gopkg.in/yaml.v3"
 )
 

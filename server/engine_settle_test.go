@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/chu0119/pojun/agent"
+	"github.com/Maplisky/qisha/agent"
 )
 
 // TestHandlePlannerRoundOutcomeRegistersSettleBeforeCancelExec 钉住收尾判据的

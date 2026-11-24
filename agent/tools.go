@@ -13,8 +13,8 @@ import (
 
 	acperm "github.com/Autumn-27/norma/permission"
 	actool "github.com/Autumn-27/norma/tool"
-	"github.com/chu0119/pojun/db"
-	"github.com/chu0119/pojun/hosttools"
+	"github.com/Maplisky/qisha/db"
+	"github.com/Maplisky/qisha/hosttools"
 )
 
 // compactIntents distills intents to {id, summary, state, asset_ids, parents,

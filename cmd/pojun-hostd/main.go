@@ -26,8 +26,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/chu0119/pojun/hostd"
-	"github.com/chu0119/pojun/hosttools"
+	"github.com/Maplisky/qisha/hostd"
+	"github.com/Maplisky/qisha/hosttools"
 )
 
 // version 由构建时 -ldflags "-X main.version=..." 注入。

@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/chu0119/pojun/agent"
-	"github.com/chu0119/pojun/db"
+	"github.com/Maplisky/qisha/agent"
+	"github.com/Maplisky/qisha/db"
 )
 
 // 自动收尾设置（v0.5.0）。全局生效；0 表示该判据关闭（coverage/max）。

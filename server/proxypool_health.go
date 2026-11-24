@@ -19,7 +19,7 @@ import (
 	"time"
 
 	actool "github.com/Autumn-27/norma/tool"
-	"github.com/chu0119/pojun/traffic"
+	"github.com/Maplisky/qisha/traffic"
 )
 
 // StartProxyPoolHealthCheck launches the background probe loop. It is a no-op

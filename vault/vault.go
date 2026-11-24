@@ -26,7 +26,7 @@ import (
 
 	"golang.org/x/crypto/chacha20poly1305"
 
-	"github.com/chu0119/pojun/db"
+	"github.com/Maplisky/qisha/db"
 )
 
 var aad = []byte("pojun-vault-v1")

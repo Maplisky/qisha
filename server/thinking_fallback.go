@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"github.com/Autumn-27/norma/llm"
-	"github.com/chu0119/pojun/agent"
+	"github.com/Maplisky/qisha/agent"
 )
 
 // thinking 拒绝错误的识别与自动降级。

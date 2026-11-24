@@ -17,14 +17,14 @@ import (
 	"time"
 
 	actool "github.com/Autumn-27/norma/tool"
-	"github.com/chu0119/pojun/agent"
-	pgdb "github.com/chu0119/pojun/db"
-	"github.com/chu0119/pojun/enrich"
-	"github.com/chu0119/pojun/guard"
-	"github.com/chu0119/pojun/intercept"
-	"github.com/chu0119/pojun/mihomo"
-	"github.com/chu0119/pojun/traffic"
-	"github.com/chu0119/pojun/vulnintel"
+	"github.com/Maplisky/qisha/agent"
+	pgdb "github.com/Maplisky/qisha/db"
+	"github.com/Maplisky/qisha/enrich"
+	"github.com/Maplisky/qisha/guard"
+	"github.com/Maplisky/qisha/intercept"
+	"github.com/Maplisky/qisha/mihomo"
+	"github.com/Maplisky/qisha/traffic"
+	"github.com/Maplisky/qisha/vulnintel"
 )
 
 // Task is one engagement: a description + goal + its own exploration store,

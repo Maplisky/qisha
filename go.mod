@@ -1,4 +1,4 @@
-module github.com/chu0119/pojun
+module github.com/Maplisky/qisha
 
 go 1.26.3
 

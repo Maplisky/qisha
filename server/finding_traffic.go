@@ -14,9 +14,9 @@ import (
 	"unicode/utf8"
 
 	actool "github.com/Autumn-27/norma/tool"
-	"github.com/chu0119/pojun/agent"
-	"github.com/chu0119/pojun/db"
-	"github.com/chu0119/pojun/evidence"
+	"github.com/Maplisky/qisha/agent"
+	"github.com/Maplisky/qisha/db"
+	"github.com/Maplisky/qisha/evidence"
 )
 
 func (s *Server) evidenceStore() *evidence.Store {

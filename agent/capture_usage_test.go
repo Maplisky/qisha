@@ -6,7 +6,7 @@ import (
 	"iter"
 	"testing"
 
-	"github.com/chu0119/pojun/db"
+	"github.com/Maplisky/qisha/db"
 	"github.com/Autumn-27/norma/agentcore"
 	"github.com/Autumn-27/norma/llm"
 )

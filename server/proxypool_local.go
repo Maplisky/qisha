@@ -24,7 +24,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/chu0119/pojun/traffic"
+	"github.com/Maplisky/qisha/traffic"
 )
 
 const (

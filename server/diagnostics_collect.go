@@ -5,8 +5,8 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/chu0119/pojun/db"
-	"github.com/chu0119/pojun/traffic"
+	"github.com/Maplisky/qisha/db"
+	"github.com/Maplisky/qisha/traffic"
 )
 
 // diagQuery 执行一条只读查询并把结果转成 []map[string]any（列名 → 值）。

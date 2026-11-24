@@ -3,7 +3,7 @@ package server
 import (
 	"sync"
 
-	"github.com/chu0119/pojun/db"
+	"github.com/Maplisky/qisha/db"
 )
 
 // Broadcaster is a per-task in-process pub/sub for live activity events. The

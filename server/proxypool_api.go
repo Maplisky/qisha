@@ -19,8 +19,8 @@ import (
 	"sync"
 	"time"
 
-	pgdb "github.com/chu0119/pojun/db"
-	"github.com/chu0119/pojun/traffic"
+	pgdb "github.com/Maplisky/qisha/db"
+	"github.com/Maplisky/qisha/traffic"
 	"golang.org/x/net/proxy"
 )
 

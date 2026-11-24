@@ -16,7 +16,7 @@ import (
 
 	actool "github.com/Autumn-27/norma/tool"
 
-	"github.com/chu0119/pojun/intercept"
+	"github.com/Maplisky/qisha/intercept"
 )
 
 // 响应差分工具：把两个 HTTP 响应的**结构性差异**算出来。
