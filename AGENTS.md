@@ -61,7 +61,7 @@ POJUN_SKIP_FRONTEND=1 POJUN_SKIP_NPM_CI=1 POJUN_COMPRESS=0 POJUN_PACKAGE=0 \
 - **依赖本机装了哪些宿主工具**（与改动无关）：`hosttools.TestSummaryStaysCompact` 与
   `agent.TestWorkerToolListStaysCompact` 断言工具清单的体积预算，预算是按「只装了一部分工具」定的；
   把宿主工具全部装齐（90 件）的机器上这两个用例必然失败（已在未改动的基线代码上对照确认）。
-  CI runner 不装这些工具，按设计不会触发——这一点是推定，没有在 CI 上单独验证过。
+  CI runner 不装这些工具，按设计不会触发——v1.0.0 的 ci 已在 GitHub runner 上全量通过，这一点已验证。
 - **判定法**：单跑，过 = 环境问题；仍失败再用未改动的基线代码在同样条件下跑一遍对照。
   全量测试前先给新鲜库（见上），并用独立的测试库——**不要指向正在使用的实例**。
 - **Windows 特有**：`evidence` 目录 fsync 已做 GOOS 分支；不要引入依赖目录 fsync 的新代码。
@@ -76,6 +76,8 @@ POJUN_SKIP_FRONTEND=1 POJUN_SKIP_NPM_CI=1 POJUN_COMPRESS=0 POJUN_PACKAGE=0 \
    当发布说明，**找不到这一节就直接让发版失败**。上游 Pojun 的历史记在分隔线之后，不要混进去。
 2. commit → push main → `git tag vX.Y.Z` → push tag → GitHub Actions 自动出各平台 zip + SHA256SUMS + Docker + Release。
    版本号必须是纯净三段式（见第 4 节）。镜像发布到 `ghcr.io/maplisky/qisha`（全小写）。
+   macOS 安装冒烟只在推 main 且改动涉及 install.sh 时触发，并依赖已发布的 Release：这种推送要等标签的
+   Release 出来后再推 main，或事后 `gh workflow run macos-install-smoke.yml`，否则它会先红一次。
 3. CI 门禁与本地等价：`go build ./...`、`go test -p 1`（真 PG）、前端 tsc + `NEXT_EXPORT=1 next build`。
 4. **提示词改动会随 `SeedPromptVersioned` 自动下发**已部署实例（用户手改过的不受影响）——改 worker/planner 默认模板不用写迁移。
    规划者的「多目标调度军规」就在 `agent/planner.go` 的内置模板里；改它等于给所有未手改提示词的实例换调度规则，慎重。
@@ -89,7 +91,13 @@ POJUN_SKIP_FRONTEND=1 POJUN_SKIP_NPM_CI=1 POJUN_COMPRESS=0 POJUN_PACKAGE=0 \
 7. **Agent 引擎依赖是入库的**：`third_party/norma`（Apache-2.0，原样取自 v0.4.4），`go.mod` 用 `replace` 指向它。
    不要直接改那个目录里的代码；升级方式见 `third_party/README.md`。它是独立模块，`./...` 不会匹配到它。
 8. git push 对 github.com 常因本机代理抖动失败——`git -c http.proxy= -c https.proxy= push` 直连 + 重试循环（30-45s 间隔）+ `git ls-remote` 确认落地。
-   大仓库整包传输容易中途断开（`early EOF`）：分步取（`--depth=N` 后 `--deepen=M`）比一次 `--unshallow` 稳。
+   大仓库整包传输容易中途断开（`early EOF`）：分步取比一次 `--unshallow` 稳——`--deepen=10` 起步、成功再加大，
+   20 层以上的大步必卡（2026-11-25 实测：10 层约 6 秒，20/40 层卡死 90~150 秒）。
+   **整仓历史级别的推送直连推不上去**（传到一半 TLS 被掐，随后几分钟连不上 443）：WSL 里 `git bundle create` →
+   Windows 侧导入裸仓库 → Windows git 经本机 443 加速器**分段推**（每段 40~120 个提交，秒级完成），先推到临时分支，
+   对象齐了再推 main 与标签，最后删临时分支。WSL 里用不了那个加速器（网关 443 被拒）。
+9. **别把上游的 v0.4.x 标签带进本仓库**：发版流程按 `v*` 标签触发，`git fetch upstream --tags` 后再 `push --tags`
+   会给上百个旧版本各建一个 Release。只推显式 refspec（`main`、`vX.Y.Z`）。
 
 ## 4. 关键坑（真实踩过的）
 
