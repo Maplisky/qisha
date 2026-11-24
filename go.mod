@@ -61,6 +61,8 @@ require (
 	modernc.org/memory v1.11.0 // indirect
 )
 
-// norma 为本项目核心 agent 基建，原上游 github.com/Autumn-27/norma 曾发生仓库删除。
-// 将解析重定向到维护者 fork（内容 = 上游 v0.4.4，fork 内 module 声明保持原路径），彻底解耦单点依赖。
-replace github.com/Autumn-27/norma => github.com/chu0119/Norma v0.4.4
+// norma 为本项目核心 agent 基建。它的原上游 github.com/Autumn-27/norma 曾发生仓库删除，
+// Pojun 维护者的 fork（github.com/chu0119/Norma）同样是一个人的仓库。七杀自 v1.0.0 起把
+// v0.4.4 的内容原样放进 third_party/norma 并在本地引用：构建不再依赖任何上游仓库是否存在。
+// 升级该依赖时整目录替换，出处与许可见 third_party/README.md。
+replace github.com/Autumn-27/norma => ./third_party/norma
