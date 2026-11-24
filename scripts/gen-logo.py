@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""生成七杀 Qisha 的图标资产：logo.svg / logo-mono.svg / logo.png(512) / favicon.ico(16/32/48/64)。
+"""生成七杀 Qisha 的图标资产：logo.svg / logo-mono.svg / logo.png(512)。
 
 图形：{7/3} 七芒星——圆周上七个顶点，每隔三点相连，闭合为七个锐角的星。
 用法：python3 scripts/gen-logo.py web/public
 
-依赖 Pillow（pip install pillow）；输出 logo.svg / logo-mono.svg / logo.png(512) / favicon.ico(16/32/48/64)。
+依赖 Pillow（pip install pillow）。
+不产出页签图标（favicon）：匿名页的 HTML 不引用任何产品图像（防指纹），登录后由 TabIcon 直接引用 logo.png。
 """
 import math, os, sys
 from PIL import Image, ImageDraw
@@ -133,14 +134,7 @@ def main():
     logo = grad.convert("RGBA")
     logo.putalpha(alpha)
     logo.save(os.path.join(OUT, "logo.png"), optimize=True)
-    favicon = Image.new("RGBA", (big, big), (0, 0, 0, 0))
-    # 页签图标很小：加粗描边保证 16px 下七个角仍可辨（半径随之自动收小，尖端位置不变）
-    small_alpha = star_mask(big, STROKE + 1.6)
-    favicon.putalpha(small_alpha)
-    favicon.paste(grad, (0, 0), small_alpha)
-    favicon.save(os.path.join(OUT, "favicon.ico"), format="ICO",
-                 sizes=[(16, 16), (32, 32), (48, 48), (64, 64)])
-    print("written:", ", ".join(sorted(f for f in os.listdir(OUT) if f.startswith(("logo", "favicon")))))
+    print("written:", ", ".join(sorted(f for f in os.listdir(OUT) if f.startswith("logo"))))
 
 
 if __name__ == "__main__":

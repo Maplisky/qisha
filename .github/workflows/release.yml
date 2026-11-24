@@ -167,7 +167,7 @@ jobs:
   #    arm64 仅需模拟 apt 层，构建快很多）。
   #    始终发布到 GHCR（ghcr.io/maplisky/qisha）——用 Actions 内置 GITHUB_TOKEN，
   #    无需配置任何 secrets；若另外配置了 DOCKERHUB_USERNAME / DOCKERHUB_TOKEN
-  #    secrets，则同时推送到 <DockerHub用户名>/pojun，方便习惯 Docker Hub 的用户。
+  #    secrets，则同时推送到 <DockerHub用户名>/qisha，方便习惯 Docker Hub 的用户。
   docker-cred-check:
     runs-on: ubuntu-latest
     outputs:

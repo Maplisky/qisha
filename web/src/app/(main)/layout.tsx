@@ -17,6 +17,7 @@ import { PREFERENCE_DEFAULTS } from "@/lib/preferences/preferences-config";
 import { cn } from "@/lib/utils";
 
 import { MainContent } from "./_components/main-content";
+import { TabIcon } from "./_components/tab-icon";
 
 // Reads a layout-critical preference from the browser cookie (falls back to the
 // default during static-export prerender where document is unavailable). Kept
@@ -68,6 +69,7 @@ export default function Layout({ children }: Readonly<{ children: ReactNode }>) 
         } as React.CSSProperties
       }
     >
+      <TabIcon />
       <AppSidebar variant={variant} collapsible={collapsible} />
       <SidebarInset
         className={cn(

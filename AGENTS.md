@@ -23,6 +23,10 @@ git 历史完整保留。
   登录用户名 `POJUN`、cookie 与本地存储键（`pojun_token`、`pojun_*`）、Clash 策略组名 `POJUN-AUTO`、
   给模型看的标记串（`POJUN_WORKER_CHAT`、平台管控前缀）、Release 资产命名 `pojun-<ver>-<os>-<arch>.zip`。
 - `docs/` 里的文档是上游 Pojun 时期的设计文档与阶段快照，里面的「破军」「Pojun」指的就是本项目的前身。
+- 页签图标不走 `web/src/app/icon.png` / `favicon.ico` 这类静态文件约定——那会写进每一页的 `<head>`，包括未登录的
+  登录页（上游的 `favicon.ico` / `icon.png` 就是这样被带到每个页面的）。匿名页不引用任何产品图像；登录后由
+  `web/src/app/(main)/_components/tab-icon.tsx` 挂上 `/logo.png`。换图标改 `web/public/logo.png`
+  （`scripts/gen-logo.py` 生成），不要把图标文件加回 `app/` 目录。
 
 ## 1. 常用命令
 
