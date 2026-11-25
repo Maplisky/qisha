@@ -82,6 +82,9 @@ POJUN_SKIP_FRONTEND=1 POJUN_SKIP_NPM_CI=1 POJUN_COMPRESS=0 POJUN_PACKAGE=0 \
    版本号必须是纯净三段式（见第 4 节）。镜像发布到 `ghcr.io/maplisky/qisha`（全小写）。
    macOS 安装冒烟只在推 main 且改动涉及 install.sh 时触发，并依赖已发布的 Release：这种推送要等标签的
    Release 出来后再推 main，或事后 `gh workflow run macos-install-smoke.yml`，否则它会先红一次。
+   冒烟装的是 `POJUN_SMOKE_VERSION` 钉住的**已发布**包，所以验证不了「尚未发布的新改动」。发下一个版本时
+   把它改成新标签，并在 Verify service 里补一行 `[ -x ~/pojun/reset-password.sh ]`——这个脚本从 v1.0.0
+   之后才随包分发，v1.0.0 的包里没有。
 3. CI 门禁与本地等价：`go build ./...`、`go test -p 1`（真 PG）、前端 tsc + `NEXT_EXPORT=1 next build`。
 4. **提示词改动会随 `SeedPromptVersioned` 自动下发**已部署实例（用户手改过的不受影响）——改 worker/planner 默认模板不用写迁移。
    规划者的「多目标调度军规」就在 `agent/planner.go` 的内置模板里；改它等于给所有未手改提示词的实例换调度规则，慎重。
@@ -119,6 +122,10 @@ POJUN_SKIP_FRONTEND=1 POJUN_SKIP_NPM_CI=1 POJUN_COMPRESS=0 POJUN_PACKAGE=0 \
 - **静态导出不支持服务端 redirect()**：会被静默丢弃、路由导出成 404 页。用客户端
   `router.replace`（v0.3.88 根路由修复先例）。
 - **纯读工具用 readTool/readExpTool**：writeTool 会丢 ReadOnly/Concurrent 标记，被调度串行化。
+- **改过脚本后看一眼可执行位**：`build.sh`、`install.sh`、`start.sh`、`reset-password.sh`、`dev.sh` 必须可执行
+  （发版流程直接 `./build.sh`）。经 UNC 路径编辑文件的工具会重写整个文件、丢掉可执行位，而 `ci` 不直接跑这些
+  脚本，丢了也不红——v1.0.0 之后丢过一次。提交前 `git diff --cached --summary | grep "mode change"` 应为空；
+  `ci` 里也加了检查。
 - **不要在对话/报告里写**：FOFA key、LLM API key、任何密码明文——凭据只进运行时配置。
 - **`jwt.key` / `vault.key` 在密钥目录，不放 `data/`**：数据目录是界面与 Agent 都能浏览下载的工作区。密钥目录
   默认是可执行文件旁，`POJUN_KEY_DIR` 可改。Docker 的 compose 把它指到独立卷 `keys`——否则容器一重建，

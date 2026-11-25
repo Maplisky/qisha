@@ -480,13 +480,14 @@ deploy_binary(){
     chmod +x "$INSTALL_DIR/.$b.new"
     mv -f "$INSTALL_DIR/.$b.new" "$INSTALL_DIR/$b"
   done
-  # 其余文件（skills / README / start.sh / config.example.json）直接覆盖
+  # 其余文件（skills / README / start.sh / reset-password.sh / config.example.json）直接覆盖
   for f in "$src"/*; do
     base="$(basename "$f")"
     case "$base" in pojun|pojun-hostd|pojun-maint) continue ;; esac
     cp -r "$f" "$INSTALL_DIR/"
   done
   chmod +x "$INSTALL_DIR/start.sh"
+  if [ -f "$INSTALL_DIR/reset-password.sh" ]; then chmod +x "$INSTALL_DIR/reset-password.sh"; fi
   ok "程序就绪: $INSTALL_DIR/pojun"
 
   # 运行用户
@@ -715,6 +716,7 @@ deploy_binary_darwin(){
     cp -r "$f" "$INSTALL_DIR/"
   done
   chmod +x "$INSTALL_DIR/start.sh"
+  if [ -f "$INSTALL_DIR/reset-password.sh" ]; then chmod +x "$INSTALL_DIR/reset-password.sh"; fi
   ok "程序就绪: $INSTALL_DIR/pojun"
 
   # config.json（仅首次；升级不覆盖）

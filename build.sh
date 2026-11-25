@@ -187,6 +187,9 @@ package_binary() {
   else
     cp start.sh "$package_root/"
     chmod +x "$package_root/start.sh"
+    # 重置管理员密码的脚本：装进安装目录，忘记密码时在服务器上直接用。
+    cp reset-password.sh "$package_root/"
+    chmod +x "$package_root/reset-password.sh"
   fi
   cp -R skills "$package_root/"
   # 平台自带的 MCP 服务器（FOFA 资产测绘）：相对路径由 start.sh 的 cwd 解析

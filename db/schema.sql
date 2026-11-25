@@ -530,7 +530,7 @@ CREATE TABLE IF NOT EXISTS tasks (
     company_id     BIGINT REFERENCES companies(id) ON DELETE SET NULL,
     parent_ref     TEXT,
     timeout_seconds INTEGER NOT NULL DEFAULT 0,
-    plan_heartbeat_seconds INTEGER NOT NULL DEFAULT 300,
+    plan_heartbeat_seconds INTEGER NOT NULL DEFAULT 600,
     coverage_enabled BOOLEAN NOT NULL DEFAULT true,
     pinned_at      TIMESTAMPTZ,
     first_run_at   TIMESTAMPTZ,
@@ -546,8 +546,10 @@ CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status)          WHERE dele
 DROP TRIGGER IF EXISTS trg_tasks_upd ON tasks;
 CREATE TRIGGER trg_tasks_upd BEFORE UPDATE ON tasks
     FOR EACH ROW EXECUTE FUNCTION set_updated_at();
--- planner 心跳触发间隔(秒);补旧库。默认 300s(5min)。见 docs/planner-trigger-impl-plan.md
-ALTER TABLE tasks ADD COLUMN IF NOT EXISTS plan_heartbeat_seconds INTEGER NOT NULL DEFAULT 300;
+-- planner 心跳触发间隔(秒);补旧库。默认值与下限都是 600s(10min),见 db/tasks.go 的 MinPlanHeartbeatSeconds。
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS plan_heartbeat_seconds INTEGER NOT NULL DEFAULT 600;
+-- 老库的列默认值还是早期的 300s(低于代码下限),对齐过来。建任务时代码总会显式写入该列,这里只是让默认值不再自相矛盾。
+ALTER TABLE tasks ALTER COLUMN plan_heartbeat_seconds SET DEFAULT 600;
 -- 任务级规划轮数上限;补旧库。NULL(默认)=沿用全局 auto_finish_max_rounds;0=不限;>0=本任务上限。
 -- 与 timeout_seconds(墙钟上限)相互独立:长时间没有产出但仍在推进的任务,可以只放宽轮数而保持时间预算。
 ALTER TABLE tasks ADD COLUMN IF NOT EXISTS max_rounds INTEGER;

@@ -30,6 +30,14 @@ jobs:
       POJUN_PG_DSN: postgres://pojun:pojuntest@localhost:5432/pojun_test?sslmode=disable
     steps:
       - uses: actions/checkout@v5
+      # 发布流程直接执行 ./build.sh，README 里的示例是 sudo ./install.sh。用会重写文件的工具
+      # （例如经 UNC 路径的编辑器）改过脚本之后，可执行位容易悄悄丢掉——v1.0.0 之后就丢过一次，
+      # ci 全绿、直到发版才炸。这里检查工作区的实际权限，不看 git 索引。
+      - name: Scripts must stay executable
+        run: |
+          for f in build.sh install.sh start.sh reset-password.sh dev.sh; do
+            [ -x "$f" ] || { echo "::error::$f 没有可执行位：git update-index --chmod=+x $f"; exit 1; }
+          done
       - uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
