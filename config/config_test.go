@@ -6,6 +6,21 @@ import (
 	"testing"
 )
 
+func TestKeyDir(t *testing.T) {
+	t.Setenv("POJUN_KEY_DIR", "")
+	if got, want := KeyDir(), BaseDir(); got != want {
+		t.Fatalf("default should follow BaseDir: got %q want %q", got, want)
+	}
+	t.Setenv("POJUN_KEY_DIR", "  /var/lib/qisha/keys ")
+	if got := KeyDir(); got != "/var/lib/qisha/keys" {
+		t.Fatalf("env override: got %q", got)
+	}
+	t.Setenv("POJUN_KEY_DIR", "   ")
+	if got, want := KeyDir(), BaseDir(); got != want {
+		t.Fatalf("blank env should fall back to BaseDir: got %q want %q", got, want)
+	}
+}
+
 func TestPostgresDSNPrecedence(t *testing.T) {
 	dir := t.TempDir()
 	cfgPath := filepath.Join(dir, "config.json")

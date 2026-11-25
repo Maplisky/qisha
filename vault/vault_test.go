@@ -58,6 +58,47 @@ func TestKeyPersistedAndReused(t *testing.T) {
 	}
 }
 
+// 密钥目录可以是数据目录之外的地方（Docker 形态把它挂在独立的数据卷上，挂上来时还不存在）：
+// 主密钥落在密钥目录里，数据目录里不留副本。
+func TestKeyLivesInSeparateKeyDir(t *testing.T) {
+	dataDir := t.TempDir()
+	keyDir := filepath.Join(t.TempDir(), "keys", "nested")
+	if _, err := Open(keyDir, dataDir, nil); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(filepath.Join(keyDir, "vault.key")); err != nil {
+		t.Fatalf("主密钥未落盘到密钥目录: %v", err)
+	}
+	if entries, _ := os.ReadDir(dataDir); len(entries) != 0 {
+		t.Fatalf("数据目录里不应出现密钥文件: %v", entries)
+	}
+}
+
+// 旧版本把主密钥放在数据目录里；换到还不存在的密钥目录时要把旧密钥带过去。
+// 带不过去就会另生成一把新钥匙，已加密的凭据再也解不开。
+func TestKeyMigratesIntoFreshKeyDir(t *testing.T) {
+	dataDir := t.TempDir()
+	keyDir := filepath.Join(t.TempDir(), "keys")
+	s0, err := Open(dataDir, dataDir, nil) // 旧布局：密钥目录就是数据目录
+	if err != nil {
+		t.Fatal(err)
+	}
+	enc, err := s0.encrypt("hello")
+	if err != nil {
+		t.Fatal(err)
+	}
+	s1, err := Open(keyDir, dataDir, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, err := s1.decrypt(enc); err != nil || got != "hello" {
+		t.Fatalf("迁移后应能用原主密钥解密: %q %v", got, err)
+	}
+	if _, err := os.Stat(filepath.Join(dataDir, "vault.key")); !os.IsNotExist(err) {
+		t.Fatalf("数据目录里的旧密钥应被移除: %v", err)
+	}
+}
+
 func TestNormalizeKindPrivilege(t *testing.T) {
 	cases := map[string]string{"pass": "password", "JWT": "token", "ssh": "key", "": "password"}
 	for in, want := range cases {

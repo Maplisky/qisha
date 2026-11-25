@@ -54,6 +54,20 @@ func BaseDir() string {
 	return dir
 }
 
+// KeyDir is the directory holding the signing key (jwt.key) and the vault master
+// key (vault.key). By default it is the directory the binary lives in — never
+// data/, which the workspace file manager can list and download.
+//
+// POJUN_KEY_DIR overrides it. In Docker the binary sits in the container layer and
+// is gone after every recreate; losing vault.key there leaves every stored
+// credential undecryptable, so the compose files point this at a dedicated volume.
+func KeyDir() string {
+	if v := strings.TrimSpace(os.Getenv("POJUN_KEY_DIR")); v != "" {
+		return v
+	}
+	return BaseDir()
+}
+
 // isGoRunDir reports whether dir is where `go run` parked its executable: under
 // the system temp dir (cache miss), or anywhere inside a Go build cache
 // (…/go-build/…, the cache-hit case — NOT under os.TempDir(), which is why the

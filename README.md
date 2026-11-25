@@ -135,6 +135,8 @@ docker compose -f docker-compose.yml -f docker-compose.macos.yml up -d      # ma
 - 渗透工具随镜像内置，宿主机上不用再装。
 - 数据落在项目目录下的 `data/`（Windows 和 macOS 的覆盖文件把它换成 named volume），数据库在 `pgdata`
   卷；`skills/` 目录从宿主机挂载，改技能不用重建镜像。
+- 签名密钥和凭据库的主密钥放在单独的 `keys` 卷里：容器重建后不用重新登录，之前存进凭据库的内容也还能
+  解开。
 - 8788 是流量记录代理，只绑定在宿主机的回环地址上。
 - 升级：`docker compose pull && docker compose up -d`。卸载：`docker compose down -v`（会删掉数据卷）。
 
@@ -339,8 +341,10 @@ SQL 注入之后验证能否带出数据，拿到凭据之后尝试登录，文�
 | 数据目录 | 可执行文件旁的 `data/` | `./start.sh -data /path/to/data` |
 | 技能目录 | 可执行文件旁的 `skills/` | `config.json` 的 `skill_dir`，或环境变量 `POJUN_SKILL_DIR` |
 | 配置文件 | 可执行文件旁的 `config.json` | 环境变量 `POJUN_CONFIG` |
+| 签名密钥与凭据库主密钥 | 可执行文件旁的 `jwt.key`、`vault.key` | 环境变量 `POJUN_KEY_DIR` 指定别的目录 |
 
-PostgreSQL 是主存储；流量记录、任务工作区这类文件数据落在数据目录里。
+PostgreSQL 是主存储；流量记录、任务工作区这类文件数据落在数据目录里。数据目录能在界面上浏览和下载，
+所以两个密钥不放在那里。
 
 ### 公网部署
 
@@ -368,7 +372,7 @@ location / {
 | 看日志 | `journalctl -u pojun -f`；Docker 形态用 `docker compose logs -f` |
 | 重置管理员密码 | 用仓库里的 `reset-password.sh`（安装目录里没有这个脚本，需要从仓库取一份放到服务器上）；Docker 形态加 `-m docker` |
 | 升级 | 页面上点「一键更新」，或重新执行 `install.sh` |
-| 备份 | 备份数据库、`data/` 目录、`config.json` 和 `jwt.key` |
+| 备份 | 备份数据库、`data/` 目录、`config.json`，以及 `jwt.key` 和 `vault.key`（Docker 形态在 `keys` 卷里）。`vault.key` 丢了，凭据库里存的内容就解不开 |
 | 卸载 | 二进制：`systemctl disable --now pojun && rm -rf /opt/pojun`；Docker：`docker compose down -v` 后删目录 |
 
 「一键更新」向七杀自己的 Release 查询新版本，下载对应平台的包并校验 SHA256，替换程序后重启；新版本

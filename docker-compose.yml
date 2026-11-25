@@ -35,6 +35,9 @@ services:
       POJUN_LLM_MODEL: ${POJUN_LLM_MODEL:-}
       POJUN_LLM_BASE_URL: ${POJUN_LLM_BASE_URL:-}
       POJUN_LLM_PROXY: ${POJUN_LLM_PROXY:-}
+      # 签名密钥 jwt.key 与凭据库主密钥 vault.key 默认在可执行文件旁，也就是容器层——
+      # 容器一重建就没了，凭据库的主密钥一丢，已存的凭据就再也解不开。指到下面的独立数据卷上。
+      POJUN_KEY_DIR: /app/secrets
     ports:
       - "8787:8787"
       - "127.0.0.1:8788:8788"
@@ -42,9 +45,11 @@ services:
       # agent 才能收到 reverse shell。示例(解除注释并按需改):
       # - "4444-4450:4444-4450"
     volumes:
-      # 把数据目录（含 jwt.key、SQLite 等）绑定到项目根目录的 data/，
+      # 把数据目录（流量留痕、任务工作区等）绑定到项目根目录的 data/，
       # 方便在宿主机直接查看/备份，容器重建也不丢。
       - ./data:/app/data
+      # 密钥卷。不放 data/ 里，是因为数据目录能在界面上浏览和下载。
+      - keys:/app/secrets
       # 把项目根目录的 skills 挂进容器（覆盖镜像内置的 /app/skills）；
       # 改 skill 无需重建镜像，容器读的就是宿主机这份。
       - ./skills:/app/skills
@@ -52,3 +57,4 @@ services:
 
 volumes:
   pgdata:
+  keys:

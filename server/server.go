@@ -167,6 +167,9 @@ type triggeredRun struct {
 }
 
 func New(ctx context.Context, m *Manager, skillDir string, dataDir string, keyDir string) *Server {
+	if w := keyDirWarning(keyDir, dataDir); w != "" {
+		log.Printf("[auth] 警告：%s", w)
+	}
 	key, err := loadOrCreateJWTKey(keyDir, dataDir)
 	if err != nil {
 		log.Fatalf("[auth] JWT key: %v", err)

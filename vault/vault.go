@@ -3,8 +3,9 @@ package vault
 // 凭据保险库（v0.7.1）：加密存储站点/主机上拿到的账号、token、密钥。
 //
 // 设计目标：
-//   - 落库即加密（XChaCha20-Poly1305），主密钥在 data/vault.key（0600），
-//     也可用环境变量 POJUN_VAULT_KEY（32 字节 hex/base64）覆盖；
+//   - 落库即加密（XChaCha20-Poly1305），主密钥在密钥目录的 vault.key（0600）——密钥目录
+//     默认是可执行文件旁，可用 POJUN_KEY_DIR 指定，不放数据目录（数据目录能在界面上
+//     浏览下载）；也可用环境变量 POJUN_VAULT_KEY（32 字节 hex/base64）覆盖；
 //   - API/工具默认只返回掩码，取明文必须显式 reveal 并写审计；
 //   - 按任务隔离：worker 只能看本任务或全局（task_id=0）的凭据；
 //   - 记录 admin/root 等级别，便于攻击链判断“这条凭据能做什么”。
@@ -105,6 +106,11 @@ func loadKey(keyDir, dataDir string) ([]byte, error) {
 		return nil, errors.New("vault: keyDir 为空")
 	}
 	path := filepath.Join(keyDir, "vault.key")
+	// 密钥目录可能是刚挂上来的空卷（Docker 形态），要先建出来：下面的迁移与首次生成都要往里写，
+	// 迁移写不进去的话就会另生成一把新钥匙，旧凭据再也解不开。
+	if err := os.MkdirAll(keyDir, 0o755); err != nil {
+		return nil, err
+	}
 	// 旧版本把主密钥放在可浏览的 data 目录，工作区接口能下载/删除它。
 	// 启动时迁移到 keyDir（与 jwt.key 同级），并删除旧文件（v0.7.6）。
 	if legacy := filepath.Join(dataDir, "vault.key"); dataDir != "" && legacy != path {
@@ -121,9 +127,6 @@ func loadKey(keyDir, dataDir string) ([]byte, error) {
 	}
 	key := make([]byte, chacha20poly1305.KeySize)
 	if _, err := rand.Read(key); err != nil {
-		return nil, err
-	}
-	if err := os.MkdirAll(keyDir, 0o755); err != nil {
 		return nil, err
 	}
 	if err := os.WriteFile(path, key, 0o600); err != nil {

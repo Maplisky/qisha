@@ -982,6 +982,9 @@ services:
       # 装机代理：宿主环境页的「一键安装」和后台情报同步用。Docker 形态没有
       # config.json，只能走环境变量；服务端读它作为数据库 setting 的兜底。
       POJUN_INSTALL_PROXY: \${POJUN_INSTALL_PROXY:-}
+      # 签名密钥 jwt.key 与凭据库主密钥 vault.key 默认在可执行文件旁（容器层，重建即丢，
+      # 主密钥一丢已存凭据就解不开）；指到下面的独立密钥卷上。
+      POJUN_KEY_DIR: /app/secrets
     ports:
       - "${PORT}:8787"
       - "127.0.0.1:${PROXY_PORT}:8788"
@@ -991,10 +994,13 @@ services:
     volumes:
       - ./data:/app/data
       - ./skills:/app/skills
+      # 密钥卷不放 data/ 里：数据目录能在界面上浏览和下载。
+      - keys:/app/secrets
     restart: unless-stopped
 
 volumes:
   pgdata:
+  keys:
 COMPOSE
 
   ok "已生成 $INSTALL_DIR/docker-compose.yml"

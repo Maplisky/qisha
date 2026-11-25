@@ -120,6 +120,9 @@ POJUN_SKIP_FRONTEND=1 POJUN_SKIP_NPM_CI=1 POJUN_COMPRESS=0 POJUN_PACKAGE=0 \
   `router.replace`（v0.3.88 根路由修复先例）。
 - **纯读工具用 readTool/readExpTool**：writeTool 会丢 ReadOnly/Concurrent 标记，被调度串行化。
 - **不要在对话/报告里写**：FOFA key、LLM API key、任何密码明文——凭据只进运行时配置。
+- **`jwt.key` / `vault.key` 在密钥目录，不放 `data/`**：数据目录是界面与 Agent 都能浏览下载的工作区。密钥目录
+  默认是可执行文件旁，`POJUN_KEY_DIR` 可改。Docker 的 compose 把它指到独立卷 `keys`——否则容器一重建，
+  凭据库主密钥就丢了，已存的凭据再也解不开。不要为了"方便备份"把密钥挪进数据目录。
 
 ## 5. 目录速览
 

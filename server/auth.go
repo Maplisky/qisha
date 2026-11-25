@@ -48,14 +48,18 @@ func validatePassword(pw string) string {
 }
 
 // loadOrCreateJWTKey reads the 32-byte signing key from keyDir/jwt.key. keyDir is
-// the project base dir (next to the executable), NOT the browsable workspace root
-// (dataDir) — the signing key must never be listable/downloadable via the file
-// manager. Legacy installs kept it at dataDir/jwt.key; if present there and not yet
-// at the new location, it is migrated (key preserved, so sessions stay valid) and
-// the old file removed so it disappears from the workspace. On first run a random
-// key is generated and persisted.
+// the key directory (next to the executable, or POJUN_KEY_DIR), NOT the browsable
+// workspace root (dataDir) — the signing key must never be listable/downloadable via
+// the file manager. Legacy installs kept it at dataDir/jwt.key; if present there and
+// not yet at the new location, it is migrated (key preserved, so sessions stay valid)
+// and the old file removed so it disappears from the workspace. On first run a
+// random key is generated and persisted.
 func loadOrCreateJWTKey(keyDir, dataDir string) ([]byte, error) {
 	path := filepath.Join(keyDir, jwtKeyFilename)
+	// 密钥目录可能是刚挂上来的空卷（Docker 形态），要先建出来，下面的迁移与首次生成都要用。
+	if err := os.MkdirAll(keyDir, 0o755); err != nil {
+		return nil, fmt.Errorf("create key dir: %w", err)
+	}
 	// one-time migration out of the old in-workspace location.
 	if legacy := filepath.Join(dataDir, jwtKeyFilename); legacy != path {
 		if _, err := os.Stat(path); os.IsNotExist(err) {
@@ -83,6 +87,31 @@ func loadOrCreateJWTKey(keyDir, dataDir string) ([]byte, error) {
 	}
 	log.Printf("[auth] 新 JWT key 已写入 %s", path)
 	return buf, nil
+}
+
+// keyDirWarning 检查密钥目录是否落在可浏览的数据目录里，返回空串表示没问题。
+// 数据目录是工作区接口与 Agent 文件工具都能读写的根：密钥放进去，等于把管理员会话的
+// 签名权和凭据库的解密权一并交出去。默认布局（可执行文件目录/data）不受影响。
+func keyDirWarning(keyDir, dataDir string) string {
+	if keyDir == "" || dataDir == "" {
+		return ""
+	}
+	k, err := filepath.Abs(keyDir)
+	if err != nil {
+		return ""
+	}
+	d, err := filepath.Abs(dataDir)
+	if err != nil {
+		return ""
+	}
+	rel, err := filepath.Rel(d, k)
+	if err != nil {
+		return ""
+	}
+	if rel == "." || (rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator))) {
+		return fmt.Sprintf("密钥目录 %s 位于可浏览的数据目录 %s 之内，界面与 Agent 都能读到那里的文件；请把它移到数据目录之外", k, d)
+	}
+	return ""
 }
 
 // currentJWTKey 原子读取当前签名 key（改密码轮换后立即变化）。

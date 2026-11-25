@@ -112,7 +112,9 @@ RUN bash /tmp/install-tools.sh && rm -f /tmp/install-tools.sh
 # entrypoint：先后台拉起 hostd（root 常驻，「宿主环境」页一键装工具），再 exec start.sh
 COPY docker/docker-entrypoint.sh /app/docker-entrypoint.sh
 RUN chmod +x /app/docker-entrypoint.sh
-# data/（SQLite + jwt.key）持久化点
+# data/（流量留痕、任务工作区等）持久化点。签名密钥 jwt.key 与凭据库主密钥 vault.key
+# 不在其中（数据目录能在界面上浏览下载）：默认在可执行文件旁，compose 用 POJUN_KEY_DIR
+# 把它们指到独立的数据卷上，容器重建后不丢。
 VOLUME ["/app/data"]
 EXPOSE 8787 8788
 ENTRYPOINT ["/app/docker-entrypoint.sh"]
