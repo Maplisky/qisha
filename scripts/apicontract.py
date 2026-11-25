@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""ARTEX API 契约巡检。
+"""七杀 API 契约巡检。
 
 对后端全部路由做三段检查：
 
@@ -15,7 +15,7 @@
     python scripts/extract_routes.py server /tmp/routes.json
 
     # 2) 跑巡检（token 从环境变量读，或用用户名密码自动登录换取）
-    ARTEX_USERNAME=ARTEX ARTEX_PASSWORD=*** python scripts/apicontract.py \
+    POJUN_USERNAME=POJUN POJUN_PASSWORD=*** python scripts/apicontract.py \
         --routes /tmp/routes.json --base-url http://127.0.0.1:8787
 
     # 3) 只跑未授权段（无凭据时）
@@ -327,12 +327,12 @@ def summarize(results):
 
 
 def main():
-    ap = argparse.ArgumentParser(description="ARTEX API 契约巡检")
+    ap = argparse.ArgumentParser(description="七杀 API 契约巡检")
     ap.add_argument("--routes", required=True, help="extract_routes.py 产出的 JSON")
     ap.add_argument("--base-url", default="http://127.0.0.1:8787")
-    ap.add_argument("--token", default=os.environ.get("ARTEX_TOKEN"), help="JWT；不给则用用户名密码自动登录")
-    ap.add_argument("--username", default=os.environ.get("ARTEX_USERNAME"))
-    ap.add_argument("--password", default=os.environ.get("ARTEX_PASSWORD"))
+    ap.add_argument("--token", default=os.environ.get("POJUN_TOKEN"), help="JWT；不给则用用户名密码自动登录")
+    ap.add_argument("--username", default=os.environ.get("POJUN_USERNAME"))
+    ap.add_argument("--password", default=os.environ.get("POJUN_PASSWORD"))
     ap.add_argument("--anon-only", action="store_true", help="只跑未授权段（无凭据时用）")
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--json", dest="json_out", help="把完整报告写到这个文件")

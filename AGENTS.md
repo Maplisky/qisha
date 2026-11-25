@@ -146,12 +146,19 @@ intercept/      三层拦截（规则+LLM judge+ask 审批；judge prompt 在 pr
 listener/       回连接收器；guard/        审批门（Attributions 已回流 planner 态势）
 traffic/ vulnintel/ llmpool/ selfupdate/ report/（手写 OOXML，勿引第三方文档库） skills/
 web/            Next.js 前端（src/app 路由；lib/api.ts 单一 API 封装）
-docs/           设计文档 + 阶段报告（按日期命名的是阶段性快照，越新的越权威）
+docs/           前身时期的参考资料（设计说明 / 历史快照；不是七杀的路线图，分类见 docs/README.md）
 ```
 
-## 6. 文档权威顺序（同一话题以新为准）
+## 6. docs/ 怎么用
 
-`docs/深度优化方案-2026-10-31.md`（当前路线图）> `docs/产品全面体检-2026-10-31.md`（缺陷基线）>
-`docs/模型路由策略.md`（模型选型）> `docs/红队能力建设-2026-10-30.md` > `docs/产品优化清单-2026-10-29.md`
-（历史，35% 完成度快照）。部署与排障：`docs/部署手册.md`（含 LAN 源安装配方）。
-接手背景：`docs/项目交接文档.md`。
+`docs/` 是参考资料，不是七杀的路线图。里面的文档都写于前身时期（ARTEX / Pojun），名字、地址、行号都是
+当时的，与代码不一致时以代码为准；完整分类见 [docs/README.md](docs/README.md)。最常用的几篇：
+
+- 设计说明：`docs/01-双图架构.md`、`docs/02-引擎与调度闭环.md`、`docs/03-LLM接入层.md`、
+  `docs/04-审批与拦截.md`——改对应模块前先读一篇，能省不少读代码的时间。
+- 部署与排障：`docs/部署手册.md`（版本停在 Pojun 的 v0.4.x，安装命令以 README 为准）、
+  `docs/公网部署安全加固-2026-10-29.md`。
+- 来历：`docs/项目交接文档.md`（Pojun 维护者写的交接文档；血统见 README「血统」一节）。
+
+带日期的体检、计划、对比、复盘是当时的快照，只作背景——不要把它们当成待办、权威结论或「当前路线图」。
+产品现状以 README 与本文件为准。

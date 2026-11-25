@@ -31,6 +31,21 @@
   下一次打标签发版就会在构建这一步失败。已发布的 v1.0.0 不受影响。`ci` 里加了一步检查关键脚本的
   可执行位。
 
+### 清理
+
+- **删除三样失效的东西。** `docker-compose.bench.yml`：它要构建的 `Dockerfile.bench` 与 `bench/` 早已被上游移出
+  版本库，这个文件留下来是个孤儿。`docs/AI-交接指南.md` 与 `docs/改名影响面与执行计划.md`：前者是 Pojun
+  维护者写给自己 AI 的交接指南，后者是 Pojun 由 ARTEX 改名的执行计划，都不适用于七杀。其余前身时期的
+  文档保留为参考资料，`docs/README.md` 重新分成「设计说明 / 部署与来历 / 历史快照」三类；`AGENTS.md`
+  里原先把 Pojun 当时的路线图当作「当前权威顺序」的说法一并更正。
+- **两次改名都没轮到的地方补上。** `start.bat` 还指着 `artex.exe`；`scripts/devtest.ps1` 设的是
+  `ARTEX_PG_DSN`，而代码读的是 `POJUN_PG_DSN`，这个脚本实际跑不通；`scripts/apicontract.py`、
+  `scripts/extract_routes.py`、`scripts/pagecheck.py` 与 sidequestion 的两份说明里也还是旧名。全部改为现名，
+  `start.bat` 保持 CRLF 行尾。
+- `.gitignore` / `.dockerignore` 去掉旧二进制名（`/artex*`）与 bench 的条目，以及两条重复的忽略项。
+- `docs/部署手册.md` 里两处命令在改品牌时被机械替换成了 `Maplisky/qisha`，可七杀从来没有 v0.4.19。
+  恢复为当时的真实地址，并在开头注明这是前身时期的手册、安装以 README 为准。
+
 ## [1.0.0] - 2026-11-25
 
 七杀 Qisha 的第一个独立版本。功能基线取自上游 Pojun（破军）v0.4.86；自本版起不再跟随上游发版。

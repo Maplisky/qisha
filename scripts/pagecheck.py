@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""ARTEX 页面巡检辅助。
+"""七杀页面巡检辅助。
 
 配合 chrome-devtools MCP 使用：这份清单给出要访问的页面、每个页面要检查的
 DOM 锚点（用来判断页面是否真的渲染出来了，而不是停在 loading / 报错页），
@@ -9,7 +9,7 @@ DOM 锚点（用来判断页面是否真的渲染出来了，而不是停在 loa
 用法（由 Claude 调用 chrome-devtools 工具执行）：
     1. browser_navigate 到每个 url
     2. browser_take_snapshot 拿到 a11y 树 → 对照 anchors 检查关键元素在不在
-    3. browser_take_screenshot 存到 screenshots/<name>.png
+    3. browser_take_screenshot 存到本地的 pages/<name>.png（不入库）
     4. browser_console_messages 收集 console error
 
 页面清单同时也是「哪些页面存在、每个页面应该有什么」的基线。
@@ -22,7 +22,7 @@ import sys
 # (名称, 路径, 必须出现的关键文本/角色锚点)
 # anchors 用「页面上应该看得到的文字」判断，比选择器更抗前端重构。
 PAGES = [
-    ("login",           "/login",                      ["ARTEX", "密码"]),
+    ("login",           "/login",                      ["控制台登录", "密码"]),
     ("dashboard",       "/dashboard",                  []),
     ("tasks",           "/function/tasks",             ["任务"]),
     ("task-detail",     "/function/tasks/detail?id=1",  []),
@@ -55,7 +55,7 @@ PAGES = [
 
 def main():
     out = sys.argv[1] if len(sys.argv) > 1 else "pages.json"
-    base = os.environ.get("ARTEX_BASE", "http://10.10.70.17:8787")
+    base = os.environ.get("POJUN_BASE", "http://127.0.0.1:8787")
     doc = {
         "base": base,
         "count": len(PAGES),

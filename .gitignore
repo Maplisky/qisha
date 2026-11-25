@@ -2,9 +2,6 @@
 /pojun
 /pojun.exe
 /pojun-*
-/artex
-/artex.exe
-/artex-*
 /dist/
 *.zip
 SHA256SUMS
@@ -33,8 +30,6 @@ config.json
 # 数据目录
 /data/
 /pgdata/
-*.sqlite
-*.db
 
 # IDE/编辑器
 .idea/
@@ -49,9 +44,6 @@ Thumbs.db
 
 # 测试产物
 *-events.csv
-/bench/
-/Dockerfile.bench
-/Dockerfile.bench.v2
 
 # Python 缓存
 __pycache__/

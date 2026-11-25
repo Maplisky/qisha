@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""从 Go 源码提取 ARTEX 的全部 API 路由。
+"""从 Go 源码提取七杀的全部 API 路由。
 
-ARTEX 用 net/http 的 ServeMux（Go 1.22+ 支持 "METHOD /path/{wildcard}" 模式）。
+七杀用 net/http 的 ServeMux（Go 1.22+ 支持 "METHOD /path/{wildcard}" 模式）。
 路由注册散落在 server/ 下的多个文件里，绝大多数是字面量：
 
     mux.HandleFunc("GET /api/tasks", s.listTasks)
