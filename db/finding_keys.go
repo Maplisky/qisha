@@ -14,9 +14,10 @@ import (
 // v0.9 多键去重：一条 finding 可以携带多个身份键，强键自动合并、弱键只做候选。
 //
 // 设计取舍：
-//   - root/cve/endpoint/param/legacy 是强键，命中即认为同一底层漏洞；
-//   - asset_class/name 是弱键，只用于「可能重复」提示，绝不自动合并，
-//     避免把同资产下两条真实不同的发现误并；
+//   - root/cve/legacy 是强键，命中即认为同一底层漏洞；
+//   - endpoint/param/asset_class/name 是弱键，只用于「可能重复」提示，绝不自动合并。
+//     endpoint/param 只说明「同一位置」，把它们当强键等于断言「同一位置就是同一漏洞」：
+//     asset_class/name 则会把同资产下两条真实不同的发现误并；
 //   - 所有键都限定同任务。跨任务只在列表/详情提示，不自动改写。
 const (
 	FindingKeyRoot       = "root"

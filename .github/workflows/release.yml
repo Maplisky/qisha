@@ -27,8 +27,8 @@ jobs:
           name: web-dist
           path: web/out
 
-  # ② Linux 交叉编译（amd64/arm64，内嵌前端）+ 打 zip。
-  #    暂不适配 Windows/macOS：产品定位是 Linux 服务器常驻部署。
+  # ② 交叉编译（Linux 与 macOS，各 amd64/arm64，内嵌前端）+ 打 zip。
+  #    不出 Windows 原生包：特权助手与工具链是 Linux 体系，Windows 走 Docker。
   binaries:
     needs: frontend
     runs-on: ubuntu-latest

@@ -4,14 +4,14 @@ package config
 
 import (
 	"encoding/json"
-	"log"
-	"sync"
 	"fmt"
+	"log"
 	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 // Database is the PostgreSQL connection config. Either set DSN directly, or set

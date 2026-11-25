@@ -45,6 +45,11 @@
 - `.gitignore` / `.dockerignore` 去掉旧二进制名（`/artex*`）与 bench 的条目，以及两条重复的忽略项。
 - `docs/部署手册.md` 里两处命令在改品牌时被机械替换成了 `Maplisky/qisha`，可七杀从来没有 v0.4.19。
   恢复为当时的真实地址，并在开头注明这是前身时期的手册、安装以 README 为准。
+- **一批与代码不符的注释更正。** `cmd/pojun/main.go` 与 `agent/provider.go` 还写着「双 SQLite 图」，后者引用的
+  文档也不存在；`hosttools` 的注释写 39 件工具（实际 90）；`db/finding_keys.go` 的头注释把 endpoint / param
+  说成强键（代码里是弱键）；`release.yml` 的注释说不适配 macOS，矩阵里却有；`ci.yml` 的注释把 `evidence`
+  列为无锁包（实际持锁）。`go.mod` 里 norma 的版本号对齐入库的 v0.4.4。登录页《安全与合规声明》里
+  一处字面的 `**…**` 改为真正的加粗。
 
 ## [1.0.0] - 2026-11-25
 

@@ -1,6 +1,6 @@
-// Command pojun runs the QISHA (七杀) backend: the dual SQLite graph stores,
-// the event-driven exploration engine, and the JSON HTTP API consumed by the
-// shadcn/ui frontend.
+// Command pojun runs the QISHA (七杀) backend: the asset and exploration graphs
+// on PostgreSQL, the event-driven exploration engine, and the JSON HTTP API
+// consumed by the embedded Next.js frontend.
 //
 // 可执行文件、安装目录、systemd 服务名与环境变量前缀沿用 pojun / POJUN_*，以便从
 // 上游 Pojun 部署原地升级；产品名与发布源自 v1.0.0 起独立为七杀 Qisha。
@@ -58,7 +58,7 @@ func main() {
 func run() int {
 	var (
 		addr    = flag.String("addr", ":8787", "HTTP listen address")
-		dataDir = flag.String("data", filepath.Join(config.BaseDir(), "data"), "data directory for SQLite stores (default: data/ next to the executable)")
+		dataDir = flag.String("data", filepath.Join(config.BaseDir(), "data"), "data directory: traffic records, task workspaces (default: data/ next to the executable)")
 		proxy   = flag.String("proxy", "127.0.0.1:8788", "traffic recording proxy address (empty to disable)")
 	)
 	flag.Parse()
