@@ -142,7 +142,7 @@ docker compose -f docker-compose.yml -f docker-compose.macos.yml up -d      # ma
 （Linux 与 macOS，各有 amd64、arm64），用同页的 `SHA256SUMS` 校验。解压后：
 
 ```bash
-cp config.example.json config.json    # 填好数据库连接
+cp config.example.json config.json    # 填好数据库连接；示例里的端口是 5433，按实际改
 ./start.sh
 ```
 
@@ -356,7 +356,7 @@ location / {
 | 要做的事 | 怎么做 |
 |---|---|
 | 看日志 | `journalctl -u pojun -f`；Docker 形态用 `docker compose logs -f` |
-| 重置管理员密码 | `./reset-password.sh`；Docker 形态加 `-m docker` |
+| 重置管理员密码 | 用仓库里的 `reset-password.sh`（安装目录里没有这个脚本，需要从仓库取一份放到服务器上）；Docker 形态加 `-m docker` |
 | 升级 | 页面上点「一键更新」，或重新执行 `install.sh` |
 | 备份 | 备份数据库、`data/` 目录、`config.json` 和 `jwt.key` |
 | 卸载 | 二进制：`systemctl disable --now pojun && rm -rf /opt/pojun`；Docker：`docker compose down -v` 后删目录 |
