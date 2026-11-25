@@ -1857,8 +1857,8 @@ func (t *ToolSet) addFinding() actool.CoreTool {
 		if msg := validateFindingEvidence(a.Severity, a.Evidence); msg != "" {
 			return actool.Errorf(msg), nil
 		}
-		// 机械验证凭据校验（v0.4.52）：critical/high 必须附 HTTP 状态码/curl 输出/
-		// 工具命中结果等可机械复现的验证凭据。纯版本匹配不通过。
+		// 机械验证凭据校验（v0.4.52）：critical/high 必须附 HTTP 状态行/curl 输出/
+		// 命令回显/工具命中结果等可机械复现的验证凭据。纯版本匹配不通过。
 		if msg := validateMechanicalEvidence(a.Severity, a.Evidence); msg != "" {
 			return actool.Errorf(msg), nil
 		}
