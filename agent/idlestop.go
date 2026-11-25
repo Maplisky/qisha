@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strings"
 	"sync"
 	"time"
 
@@ -433,21 +432,4 @@ const idleStopMessage = "本轮已连续多轮没有任何写回——这个方�
 // logIdleStop 记一条收场日志（统一格式，便于事后统计）。
 func logIdleStop(worker string, taskID int64, intentID int64, reason string) {
 	log.Printf("[worker %s] task %d intent #%d 无增量自动收场: %s", worker, taskID, intentID, reason)
-}
-
-// summarizeWriteDelta 描述一轮的写回增量（调试/日志用）。
-func summarizeWriteDelta(cur, prev WriteCounts) string {
-	return fmt.Sprintf("事实+%d 资产+%d 漏洞+%d",
-		cur.Facts-prev.Facts, cur.Assets-prev.Assets, cur.Findings-prev.Findings)
-}
-
-// idleStopStateText 是给 planner 看的一句话说明（写进意图的停止原因）。
-//
-// planner 靠它区分两种 exhausted：
-//   - 「被墙钟掐断」（还有明确的下一步，只是没时间）
-//   - 「探到边界」（这个方向本身没东西了）
-//
-// 这两种在 planner 的决策里完全相反，混在一起就会导致「一直续派同一方向」。
-func idleStopStateText(reason string) string {
-	return strings.TrimSpace(reason)
 }

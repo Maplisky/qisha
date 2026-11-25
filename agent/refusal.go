@@ -81,16 +81,6 @@ func reframed(req llm.CompletionRequest, attempt int) llm.CompletionRequest {
 	return out
 }
 
-func textOfMessage(m llm.Message) string {
-	var b strings.Builder
-	for _, c := range m.Content {
-		if c.Type == llm.BlockText {
-			b.WriteString(c.Text)
-		}
-	}
-	return b.String()
-}
-
 // Complete 实现非流式路径：拒答则换表述重试，最多 g.retries 次。
 // 只有系统提示带平台注入的授权任务口径时才自动重试；普通助手/未知请求
 // 不自动重试，避免把真正的边界请求也当成误拒答。

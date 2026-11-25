@@ -4,8 +4,8 @@ import (
 	"context"
 	"path/filepath"
 
-	"github.com/Maplisky/qisha/intercept"
 	"fmt"
+	"github.com/Maplisky/qisha/intercept"
 	"log"
 	"strconv"
 	"sync/atomic"
@@ -50,12 +50,6 @@ func (e *Engine) markSettling(taskID, reason string) bool {
 	}
 	_, loaded := e.settling.LoadOrStore(taskID, reason)
 	return !loaded
-}
-
-func (e *Engine) settleReason(taskID string) string {
-	v, _ := e.settling.Load(taskID)
-	s, _ := v.(string)
-	return s
 }
 
 // ---------- 在跑计数(worker.Execute + planner.Plan),用于 drain ----------

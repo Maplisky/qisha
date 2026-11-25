@@ -192,13 +192,6 @@ func placeholderNumbers(s string) []int {
 func TestMigrationIsNoOpOnFreshlySeededRules(t *testing.T) {
 	// 全新安装后库里每条规则的样子 = 新定义。
 	for _, r := range builtinInterceptRules {
-		oldName := r.name
-		if old, ok := oldRuleNames[r.name]; ok {
-			oldName = old
-		}
-		oldPat, hasOldPat := oldRulePatterns[oldName]
-		patChanged := hasOldPat && oldPat != r.pattern
-
 		// 判据：action 仍是旧的 deny/ask + timeout 三元组仍是旧的。
 		// 新 seed 插的规则：action 是新的（judge/deny/ask），timeout 是新的。
 		// 所以「全新安装的规则」不可能同时满足「action=旧 deny」且「timeout=旧」。
@@ -225,11 +218,8 @@ func TestMigrationIsNoOpOnFreshlySeededRules(t *testing.T) {
 					r.name)
 			}
 		}
-		if patChanged {
-			// pattern 变了，说明这条规则的 pattern 由迁移负责换；全新安装时
-			// seed 直接插新 pattern，不需要迁移介入——两者不冲突。
-			continue
-		}
+		// pattern 有变化的规则不在这里检查：迁移负责换 pattern，全新安装时 seed 直接插新
+		// pattern，不需要迁移介入，两者不冲突。
 	}
 }
 

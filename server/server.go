@@ -61,9 +61,6 @@ type Server struct {
 	previewMu   sync.Mutex
 	previewIDs  map[int64]bool
 
-	// lm is the process-wide callback listener. It is initialized lazily so an
-	// installation that never needs a callback opens no extra socket or goroutine.
-	listenOnce sync.Once
 	// listeners 是红队回连接收器管理器（listener 包）：接住反弹 shell/OOB 回连
 	// 并留证。绑定端口无需特权（1024+），不经 hostd。
 	listeners *listener.Manager

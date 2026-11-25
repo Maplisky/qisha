@@ -54,7 +54,7 @@ func TestToolOutputLedgerVerifyEvidence(t *testing.T) {
 	}
 
 	// 短行（<20 字节）不计入分母。
-	matched, total = l.VerifyEvidence("id\nls\n这是一个足够长的转述句子用来测试分母是否忽略短行。")
+	_, total = l.VerifyEvidence("id\nls\n这是一个足够长的转述句子用来测试分母是否忽略短行。")
 	if total != 1 {
 		t.Fatalf("total=%d want 1 (short lines must be ignored)", total)
 	}

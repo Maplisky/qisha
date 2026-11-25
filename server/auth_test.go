@@ -86,14 +86,6 @@ func TestValidatePassword(t *testing.T) {
 	}
 }
 
-// testKey 构造一个装好签名 key 的 Server（atomic.Value 字段无法在字面量里
-// 直接初始化，测试统一走这里）。
-func testKey(k []byte) *Server {
-	s := &Server{}
-	s.jwtKey.Store(k)
-	return s
-}
-
 // 登录防爆破：每 IP 10 分钟窗口内失败 5 次 → 锁 15 分钟；成功清零；
 // 其他 IP 不受牵连；全局阈值兜底 XFF 伪造。
 func TestLoginLimiterPerIPLockout(t *testing.T) {

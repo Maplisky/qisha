@@ -1,6 +1,7 @@
 package hostd
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -100,7 +101,7 @@ func TestAPTSourceArgsNoOfficialSource(t *testing.T) {
 }
 
 func TestInstallSourceJobRejectsCustomIndex(t *testing.T) {
-	handler := NewServer(nil, nil).Handler()
+	handler := NewServer(context.Background(), nil).Handler()
 	w := httptest.NewRecorder()
 	body := `{"tool_id":"not-a-tool","sources":{"pypi":"https://example.org/simple/"}}`
 	handler.ServeHTTP(w, httptest.NewRequest(http.MethodPost, "/jobs/with-sources", strings.NewReader(body)))

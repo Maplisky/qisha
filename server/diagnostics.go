@@ -232,29 +232,3 @@ func (s *Server) handleDiagnosticsExport(w http.ResponseWriter, r *http.Request)
 	}
 	_ = zw.Close()
 }
-
-// ── 小工具：写进 zip 的缓冲与键排序（保留给测试/旧调用）──
-
-type byteWriter struct{ b []byte }
-
-func newByteWriter() *byteWriter { return &byteWriter{} }
-
-func (w *byteWriter) Write(p []byte) (int, error) {
-	w.b = append(w.b, p...)
-	return len(p), nil
-}
-
-func (w *byteWriter) Bytes() []byte { return w.b }
-
-func sortedKeys(m map[string]any) []string {
-	out := make([]string, 0, len(m))
-	for k := range m {
-		out = append(out, k)
-	}
-	for i := 1; i < len(out); i++ {
-		for j := i; j > 0 && out[j] < out[j-1]; j-- {
-			out[j], out[j-1] = out[j-1], out[j]
-		}
-	}
-	return out
-}

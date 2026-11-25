@@ -693,7 +693,8 @@ func extractTaskArchivePackage(path, expectedSHA, destination string) error {
 			if err := os.MkdirAll(target, archiveDirMode); err != nil {
 				return err
 			}
-		case tar.TypeReg, tar.TypeRegA:
+		// 0x00：旧版 tar 给普通文件写的类型位（即已废弃的 tar.TypeRegA），仍要认。
+		case tar.TypeReg, 0x00:
 			if err := os.MkdirAll(filepath.Dir(target), archiveDirMode); err != nil {
 				return err
 			}

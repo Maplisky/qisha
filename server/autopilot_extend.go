@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/Maplisky/qisha/db"
@@ -126,44 +125,6 @@ func (e *Engine) maybeExtendAutopilot(t *Task) bool {
 	return true
 }
 
-// autopilotRelentlessFromPG 读「不达目的不罢休」开关（默认开）。
-// 开：worker 不设单轮墙钟预算、不挂无增量收场、不注入意图 token 预算提醒；
-// autopilot 的 auto_rounds 收尾也被抑制，goal_met 时只要还有活就自动续杯。
-func autopilotRelentlessFromPG(pg interface {
-	GetSetting(string) (string, bool, error)
-}) bool {
-	if pg == nil {
-		return true
-	}
-	v, ok, err := pg.GetSetting("autopilot_relentless")
-	if err != nil || !ok {
-		return true
-	}
-	return v != "false" && v != "0"
-}
-
-// autopilotIntentMaxHoursFromPG 读单意图兜底墙钟（小时，默认 0=不限）。
-// relentless 取消了所有“没进展”闸门；需要限时的任务可在设置里显式配置。
-func autopilotIntentMaxHoursFromPG(pg interface {
-	GetSetting(string) (string, bool, error)
-}) int {
-	if pg == nil {
-		return 0
-	}
-	v, ok, err := pg.GetSetting("autopilot_intent_max_hours")
-	if err != nil || !ok {
-		return 0
-	}
-	n, err := strconv.Atoi(strings.TrimSpace(v))
-	if err != nil || n < 0 {
-		return 0
-	}
-	if n > 24 {
-		return 24
-	}
-	return n
-}
-
 // autopilotExtendWavesFromPG 读续杯波次上限（默认 10，0=关闭）。
 func autopilotExtendWavesFromPG(pg *db.DB) int {
 	if n, ok := settingInt(pg, settingAutopilotExtendWaves); ok {
@@ -176,10 +137,4 @@ func autopilotExtendWavesFromPG(pg *db.DB) int {
 		return n
 	}
 	return defaultAutopilotExtendWaves
-}
-
-// autopilotExtendWave 读当前已用波次（供管理面/调试）。
-func (e *Engine) autopilotExtendWave(taskID int64) int {
-	n, _ := settingInt(e.m.pg, fmt.Sprintf("autopilot_wave_%d", taskID))
-	return n
 }

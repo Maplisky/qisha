@@ -87,12 +87,6 @@ type ToolSet struct {
 	// 与 Bash 的 HTTP_PROXY 同源（记录 MITM 或全局代理），保证流量留痕一致。
 	egressProxy string
 	egressCA    string
-	// lastScopeWarnings 是最近一次 record_fact 中 source/foreign 资产的提示，
-	// 只回传、不阻断写入。
-	lastScopeWarnings []string
-	// lastLowNovelty 是本轮 record_fact 中「低新颖度」条数（与最近事实高度相似或
-	// 没有任何 evidence）。这类写回仍会入库，但不会重置意图租约的零写回计时。
-	lastLowNovelty int
 	// runDir 是本次运行的专属工作目录（worker 在这里产生截图/样本），
 	// save_evidence 的相对路径基准；由 Worker.Execute 注入。
 	runDir string

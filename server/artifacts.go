@@ -473,18 +473,6 @@ func (s *Server) artifactImageData(a *db.TaskArtifact) ([]byte, bool) {
 	return data, true
 }
 
-// artifactListJSON 供报告生成时把附件清单写进"附件"章节。
-func artifactListJSON(list []db.TaskArtifact) []map[string]any {
-	out := make([]map[string]any, 0, len(list))
-	for _, a := range list {
-		out = append(out, map[string]any{
-			"id": a.ID, "finding_id": a.FindingID, "name": a.Name, "kind": a.Kind, "size_bytes": a.SizeBytes,
-			"note": a.Note, "source_url": a.SourceURL,
-		})
-	}
-	return out
-}
-
 // recordArtifactAbs 以绝对路径登记附件（调用方已完成路径边界校验）。
 func (s *Server) recordArtifactAbs(abs, taskKey string, findingID int64, name, kind, sourceURL, note string, size int64) (*db.TaskArtifact, error) {
 	pg := s.m.PG()

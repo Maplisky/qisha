@@ -23,16 +23,6 @@ import (
 //
 // 这两组测试是「死字段」的回归基线：改回读全局就会红。
 
-// judgeRuleWithTimeout 走「规则命中 judge」路径，携带规则级 timeout 覆盖。
-func judgeRuleWithTimeout(t *testing.T, rt RuleTimeout, reviewer Reviewer) (Decision, bool) {
-	t.Helper()
-	ic := New(nil)
-	if reviewer != nil {
-		ic.SetReviewer(reviewer)
-	}
-	return ic.JudgeRuleWithTimeout(context.Background(), "Bash", json.RawMessage(`{"command":"rm -rf /tmp/x"}`), rt)
-}
-
 // 规则显式声明了 timeout（enabled=true）时，裁决墙钟上限必须用规则自己的值，
 // 而不是全局的 180s。
 func TestRuleTimeoutOverridesGlobalJudgeTimeout(t *testing.T) {
