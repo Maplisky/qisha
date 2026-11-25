@@ -96,6 +96,20 @@ func (j *Job) setErr(err error) {
 	j.mu.Unlock()
 }
 
+// jobJSON 是 Job 的「对外序列化」形态，字段与标签完全相同（同一种类型的两个名字），
+// 对外的 JSON 不变。作业协程在运行中会持锁改 State / Log / Err，HTTP 接口如果直接编码
+// *Job，就是一边写一边无锁读：返回的字段彼此对不上是小事，读到大对象写到一半的内部
+// 状态才是竞态检测器报的那类问题（「发起安装后立刻查询进度」稳定复现）。
+type jobJSON Job
+
+// MarshalJSON 在持锁状态下读取各字段。
+func (j *jobJSON) MarshalJSON() ([]byte, error) {
+	j.mu.Lock()
+	defer j.mu.Unlock()
+	type plain Job // 不带方法的同一类型，避免递归回到这里
+	return json.Marshal((*plain)(j))
+}
+
 // Server 任务管理器 + HTTP 接口。
 type Server struct {
 	mu     sync.Mutex
@@ -207,7 +221,7 @@ func (s *Server) start(parent context.Context, toolID, proxy string, sources Ins
 	return j, nil
 }
 
-// Get 取任务快照。
+// Get 取任务。返回的是活对象，字段随时在变：对外输出一律经 (*jobJSON)(j) 序列化。
 func (s *Server) Get(id string) (*Job, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -462,10 +476,6 @@ func (s *Server) runGitHub(ctx context.Context, j *Job, tool hosttools.Tool, pro
 func installFromArchive(j *Job, blob []byte, tool hosttools.Tool) (int, error) {
 	if tool.Raw {
 		return installBinary(j, tool, blob)
-	}
-	want := tool.BinInZip
-	if want == "" {
-		want = tool.Bin
 	}
 	// zip: PK\x03\x04
 	if len(blob) > 4 && blob[0] == 'P' && blob[1] == 'K' {
@@ -780,7 +790,7 @@ func (s *Server) Handler() http.Handler {
 			writeJSON(w, 400, map[string]any{"error": err.Error()})
 			return
 		}
-		writeJSON(w, 201, job)
+		writeJSON(w, 201, (*jobJSON)(job))
 	}
 	mux.HandleFunc("POST /jobs", startJob)
 	// With a selected mirror, old helpers must reject the job instead of silently
@@ -793,7 +803,7 @@ func (s *Server) Handler() http.Handler {
 			writeJSON(w, 404, map[string]any{"error": "任务不存在"})
 			return
 		}
-		writeJSON(w, 200, job)
+		writeJSON(w, 200, (*jobJSON)(job))
 	})
 
 	mux.HandleFunc("POST /jobs/{id}/cancel", func(w http.ResponseWriter, r *http.Request) {

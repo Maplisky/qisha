@@ -47,25 +47,6 @@ func hostdClient() *http.Client {
 	}
 }
 
-// hostdProbe 探测助手是否在线,返回 (在线, 原因)。原因用于前端解释为什么不能装。
-func (s *Server) hostdProbe(ctx context.Context) (bool, string) {
-	ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
-	defer cancel()
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://hostd/healthz", nil)
-	if err != nil {
-		return false, err.Error()
-	}
-	resp, err := hostdClient().Do(req)
-	if err != nil {
-		return false, "宿主助手未运行（未安装 pojun-hostd，或当前是 Docker 部署）"
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		return false, "宿主助手响应异常: HTTP " + resp.Status
-	}
-	return true, ""
-}
-
 // installProxy 读取「装机代理」设置，供宿主工具安装和程序更新等维护请求使用。
 //
 // 环境变量 POJUN_INSTALL_PROXY 是兜底：Docker 形态没有 config.json，
@@ -429,10 +410,13 @@ func (s *Server) hostdInfo(ctx context.Context) (hostdInfo, bool) {
 // 主程序每次自我升级后重启，这里发现版本落后就通知助手自我换装；助手会自己从
 // 官方 Release 下载并按 SHA256SUMS 校验，主程序能影响的只有"装哪个已发布版本"。
 func (s *Server) StartHostdReconcile() {
+	// 协程里只认启动这一刻的 ctx，不回头读 s.ctx：测试夹具会改写这个字段
+	// （竞态检测器在 finding_traffic 的用例里报过）。产品里它从创建起就不变，行为一致。
+	ctx := s.ctx
 	go func() {
 		// 等主服务与助手都稳定下来，别和启动抢资源。
 		select {
-		case <-s.ctx.Done():
+		case <-ctx.Done():
 			return
 		case <-time.After(45 * time.Second):
 		}
@@ -441,7 +425,7 @@ func (s *Server) StartHostdReconcile() {
 				return
 			}
 			select {
-			case <-s.ctx.Done():
+			case <-ctx.Done():
 				return
 			case <-time.After(30 * time.Second):
 			}
