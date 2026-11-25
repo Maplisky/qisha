@@ -23,6 +23,24 @@ func TestCoreTaskLifecyclePG(t *testing.T) {
 		t.Skipf("postgres unavailable (%v) — skipping", err)
 	}
 	defer m.Close()
+	// 目标拆解会用任务的模型通道（任务没指定时就是当前默认通道）发一次真实调用，失败后才回退为
+	// 「原始目标作为单目标」。同一个测试库里，别的包和更早的用例留下的假通道没填接口地址，默认
+	// 指向真实服务商：连接被立刻拒绝时回退得很快，可一旦网络让连接挂起，拆解要等到超时才回退，
+	// 下面的 3 秒就等不到目标节点——网络差的环境必挂，CI runner 上必过，看起来像「负载相关」。
+	// 本用例只关心任务的生命周期，不关心拆解：暂时摘掉「默认通道」标记，拆解立刻走回退路径。
+	var prevDefault int64
+	if err := m.pg.QueryRow(`SELECT COALESCE(MAX(id), 0) FROM llm_profiles WHERE is_default`).Scan(&prevDefault); err != nil {
+		t.Fatalf("read default llm profile: %v", err)
+	}
+	if _, err := m.pg.Exec(`UPDATE llm_profiles SET is_default=false WHERE is_default`); err != nil {
+		t.Fatalf("clear default llm profile: %v", err)
+	}
+	// defer 是后进先出：这里的恢复先于上面的 m.Close() 执行。
+	defer func() {
+		if prevDefault > 0 {
+			_, _ = m.pg.Exec(`UPDATE llm_profiles SET is_default=true WHERE id=$1`, prevDefault)
+		}
+	}()
 	td := t.TempDir()
 	s := New(context.Background(), m, td, td, td)
 	h := s.Handler()

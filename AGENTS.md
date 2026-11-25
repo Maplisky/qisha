@@ -57,17 +57,21 @@ POJUN_SKIP_FRONTEND=1 POJUN_SKIP_NPM_CI=1 POJUN_COMPRESS=0 POJUN_PACKAGE=0 \
 
 ## 2. 测试基线（判定 FAIL 是否与你有关）
 
-- **已知负载性 flaky**（单跑必过，全量偶发，勿当回归）：
+- **已知负载性 flaky**（全量偶发，勿当回归）：
   `TestChatMentionWorkerReceivesServerDetails`、`TestNotifyDigestSegmentsAndDefersRemainder`（共享库脏数据）、
   `TestChatUnavailableReasonDistinguishesStates`（Windows TempDir 清理竞态）、
-  `TestCoreTaskLifecyclePG`（目标拆解是异步的，只等 3 秒；前序测试遗留的任务循环抢 CPU 时会超时）、
   `TestTaskTemplateHTTPCRUD`（TempDir 清理竞态，同上）。
+  `TestCoreTaskLifecyclePG` 曾被列在这里，真实原因不是负载：别的测试在同一测试库里留下的假模型通道
+  没填接口地址，目标拆解拿它去调真实服务商，网络一慢就超过用例里 3 秒的等待。已在用例内隔离
+  （暂时摘掉默认通道标记），不再与网络状况相关。
 - **依赖本机装了哪些宿主工具**（与改动无关）：`hosttools.TestSummaryStaysCompact` 与
   `agent.TestWorkerToolListStaysCompact` 断言工具清单的体积预算，预算是按「只装了一部分工具」定的；
   把宿主工具全部装齐（90 件）的机器上这两个用例必然失败（已在未改动的基线代码上对照确认）。
   CI runner 不装这些工具，按设计不会触发——v1.0.0 的 ci 已在 GitHub runner 上全量通过，这一点已验证。
-- **判定法**：单跑，过 = 环境问题；仍失败再用未改动的基线代码在同样条件下跑一遍对照。
-  全量测试前先给新鲜库（见上），并用独立的测试库——**不要指向正在使用的实例**。
+- **判定法**：先给新鲜库，再单跑——复用的库里堆着历史任务和假通道，单跑也会失败，得不出结论。
+  过 = 环境问题；仍失败再用未改动的基线代码在同样条件下跑一遍对照（`git worktree add --detach <目录> <提交>`
+  单独检出一份来跑，不要动手头的工作区）。全量测试前先给新鲜库（见上），并用独立的测试库——
+  **不要指向正在使用的实例**。
 - **Windows 特有**：`evidence` 目录 fsync 已做 GOOS 分支；不要引入依赖目录 fsync 的新代码。
 - **前端 lint**：仓库的 CI 门禁只有 tsc + build，上游文件并没有按当前 Biome 版本格式化。
   所以不要对整个文件跑 `biome check --write`（会把大量无关的上游代码行一起改掉）；
