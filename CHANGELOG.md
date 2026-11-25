@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-11-25
+
+维护版本，没有新功能：修复一批问题、升级有已知漏洞的依赖，并完成 README 的重写与一轮清理。
+
 ### 变更
 
 - **README 整体重写**：全部换成七杀自己的说明，不再沿用上游 Pojun 的文字与界面截图（上游的 22 张截图
@@ -14,6 +18,11 @@
 
 ### 修复
 
+- **升级有已知漏洞的依赖。** `govulncheck` 报出代码实际调用到的漏洞 10 个，涉及 `golang.org/x/net`
+  （HTTP/2 相关 5 个）、`golang.org/x/crypto`（SSH 拒绝服务 2 个，出口跳板会走到）、
+  `github.com/klauspost/compress`、`github.com/gorilla/websocket`。全部升到修复版本，重扫为 0。
+- **`pojun-hostd` 查询安装进度时的数据竞争。** 「发起安装」「查询作业」两个接口在序列化作业状态时没有持锁，
+  而作业协程正在改它，`go test -race` 稳定复现。现在序列化在持锁状态下进行，对外 JSON 不变。
 - **Docker 形态下签名密钥与凭据库主密钥不再随容器重建丢失。** `jwt.key` 与 `vault.key` 默认放在可执行
   文件旁，在容器里就是容器层——`docker compose up -d` 重建之后，不仅全员掉线，先前存进凭据库的内容
   也因为主密钥丢失而再也解不开。新增环境变量 `POJUN_KEY_DIR` 指定密钥目录；仓库里的 compose 与
@@ -50,6 +59,8 @@
   说成强键（代码里是弱键）；`release.yml` 的注释说不适配 macOS，矩阵里却有；`ci.yml` 的注释把 `evidence`
   列为无锁包（实际持锁）。`go.mod` 里 norma 的版本号对齐入库的 v0.4.4。登录页《安全与合规声明》里
   一处字面的 `**…**` 改为真正的加粗。
+- 清理 staticcheck 确认的 23 处死代码——功能下线或改名后留下的、没有被任何地方引用的函数、字段与常量，
+  并更正几处测试小瑕疵。staticcheck 的缺陷类条目清零。
 
 ## [1.0.0] - 2026-11-25
 
@@ -3686,7 +3697,9 @@ done 18 / exhausted 99 / blocked 82——**exhausted 是 done 的 5.5 倍**，�
 - [@Autumn-27](https://github.com/Autumn-27)
 - [@neouks](https://github.com/neouks)
 
-[Unreleased]: https://github.com/chu0119/Pojun/compare/v0.3.10...HEAD
+[Unreleased]: https://github.com/Maplisky/qisha/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/Maplisky/qisha/compare/v1.0.0...v1.0.1
+[1.0.0]: https://github.com/Maplisky/qisha/compare/055e87137d4f4d1960b059bf84c42ccb5d0b3fac...v1.0.0
 [0.3.10]: https://github.com/chu0119/Pojun/compare/v0.3.9...v0.3.10
 [0.3.9]: https://github.com/chu0119/Pojun/compare/v0.3.8...v0.3.9
 [0.3.8]: https://github.com/chu0119/Pojun/compare/v0.3.7...v0.3.8

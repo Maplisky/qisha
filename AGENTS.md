@@ -53,7 +53,16 @@ POJUN_PG_DSN="postgres://pojun:pojuntest@127.0.0.1:15432/pojun_ci?sslmode=disabl
 # 发版构建（本机交叉编译验证用；正式发版靠 CI）
 POJUN_SKIP_FRONTEND=1 POJUN_SKIP_NPM_CI=1 POJUN_COMPRESS=0 POJUN_PACKAGE=0 \
   POJUN_OUTPUT=/abs/path/pojun ./build.sh --target linux/amd64
+
+# 静态分析（发版前跑；工具装在 $(go env GOPATH)/bin，国内加 GOPROXY=https://goproxy.cn,direct）
+go install honnef.co/go/tools/cmd/staticcheck@latest && staticcheck ./...   # 缺陷类（SA*、U1000）应为 0
+go install golang.org/x/vuln/cmd/govulncheck@latest && govulncheck ./...   # 「代码调用到的漏洞」应为 0
 ```
+
+staticcheck 现存的非缺陷类条目：`ST1005`（错误字符串首字母大写）若干、`S1016` 一处，以及测试里两处有意为之的
+写法（`llmrec` 传 nil context 的用例、`sidequestion` 测试里空的临界区）——不要为了清零去改它们。
+`govulncheck` 报出「Your code is affected by N vulnerabilities」就升级对应模块（只升到修复版本，
+注意 `x/net` 等对 `x/crypto` 的最低版本要求），升级后重跑全量测试。
 
 ## 2. 测试基线（判定 FAIL 是否与你有关）
 
@@ -73,6 +82,13 @@ POJUN_SKIP_FRONTEND=1 POJUN_SKIP_NPM_CI=1 POJUN_COMPRESS=0 POJUN_PACKAGE=0 \
   单独检出一份来跑，不要动手头的工作区）。全量测试前先给新鲜库（见上），并用独立的测试库——
   **不要指向正在使用的实例**。
 - **Windows 特有**：`evidence` 目录 fsync 已做 GOOS 分支；不要引入依赖目录 fsync 的新代码。
+- **竞态检测**：全仓 `go test -race -p 1 ./...`（新鲜库）里产品代码的竞争已清零——v1.0.1 修掉了 hostd 查询
+  安装进度时的作业状态竞争。还剩一份**只在测试里成立**的报告：测试辅助函数改写包级钩子
+  `agent.PromptOverride` 时，前一个用例遗留的规划协程还在读它（产品里它只在 `server.New` 赋值一次）。
+  撞上的用例会以「race detected during execution of test」失败（哪个用例撞上不一定），与改动无关。
+  改并发相关的代码后跑一遍，看有没有**新的**报告。
+- **不要用 `-shuffle`**：`db/notification_test.go` 里的用例互相有顺序依赖（如 `TestClaimExpiredLeaseRecovers`、
+  `TestDigestBatchDueAndStableBatchID`、`TestListNotificationDeliveriesPagingAndFilter`），随机排序会假失败。
 - **前端 lint**：仓库的 CI 门禁只有 tsc + build，上游文件并没有按当前 Biome 版本格式化。
   所以不要对整个文件跑 `biome check --write`（会把大量无关的上游代码行一起改掉）；
   只保证自己新增的文件干净、自己新增的行没有新告警。
@@ -84,11 +100,9 @@ POJUN_SKIP_FRONTEND=1 POJUN_SKIP_NPM_CI=1 POJUN_COMPRESS=0 POJUN_PACKAGE=0 \
    当发布说明，**找不到这一节就直接让发版失败**。上游 Pojun 的历史记在分隔线之后，不要混进去。
 2. commit → push main → `git tag vX.Y.Z` → push tag → GitHub Actions 自动出各平台 zip + SHA256SUMS + Docker + Release。
    版本号必须是纯净三段式（见第 4 节）。镜像发布到 `ghcr.io/maplisky/qisha`（全小写）。
-   macOS 安装冒烟只在推 main 且改动涉及 install.sh 时触发，并依赖已发布的 Release：这种推送要等标签的
-   Release 出来后再推 main，或事后 `gh workflow run macos-install-smoke.yml`，否则它会先红一次。
-   冒烟装的是 `POJUN_SMOKE_VERSION` 钉住的**已发布**包，所以验证不了「尚未发布的新改动」。发下一个版本时
-   把它改成新标签，并在 Verify service 里补一行 `[ -x ~/pojun/reset-password.sh ]`——这个脚本从 v1.0.0
-   之后才随包分发，v1.0.0 的包里没有。
+   macOS 安装冒烟只在推 main 且改动涉及 install.sh 时触发，并依赖已发布的 Release。冒烟装的是
+   `POJUN_SMOKE_VERSION` 钉住的**已发布**包，所以验证不了「尚未发布的新改动」。顺序是：先推标签、等
+   Release 出来，再推 main——反过来冒烟找不到包，会先红一次。每次发版把这个钉住的版本改成新标签。
 3. CI 门禁与本地等价：`go build ./...`、`go test -p 1`（真 PG）、前端 tsc + `NEXT_EXPORT=1 next build`。
 4. **提示词改动会随 `SeedPromptVersioned` 自动下发**已部署实例（用户手改过的不受影响）——改 worker/planner 默认模板不用写迁移。
    规划者的「多目标调度军规」就在 `agent/planner.go` 的内置模板里；改它等于给所有未手改提示词的实例换调度规则，慎重。
