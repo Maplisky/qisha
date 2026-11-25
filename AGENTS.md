@@ -6,7 +6,7 @@
 
 ## 0. 项目一句话
 
-七杀 Qisha = AI 自主渗透测试平台（Go 单体后端 + Next.js 静态导出前端 + PostgreSQL 唯一存储）。
+七杀 Qisha = AI 自主渗透测试平台（Go 单体后端 + Next.js 静态导出前端 + PostgreSQL 主存储；流量留痕另落本地文件与 SQLite 侧车索引）。
 planner/worker 双角色多 Agent 自主推进，双图架构（资产图×探索图），三层拦截规则，全程证据留痕，
 外加军团调度条令与任务级收尾上限。**仅供授权测试**（README 免责条款）。
 
@@ -126,8 +126,8 @@ POJUN_SKIP_FRONTEND=1 POJUN_SKIP_NPM_CI=1 POJUN_COMPRESS=0 POJUN_PACKAGE=0 \
 ```
 cmd/            入口（pojun / pojun-hostd 特权助手 / pojun-maint 维护工具）
 agent/          多 Agent 层（planner/worker/mainagent 提示词与工具；三张工具清单在 tools.go/tools_insert.go）
-db/             PostgreSQL 唯一存储（schema.sql 幂等迁移；拦截规则 seed 批次 v1-v5）
-server/         HTTP 面与引擎调度（全部路由注册在 server.go:680-1000 一带）
+db/             PostgreSQL 主存储（schema.sql 幂等迁移；拦截规则 seed 批次 v1-v5）
+server/         HTTP 面与引擎调度（全部路由注册在 server.go:720-1060 一带）
 intercept/      三层拦截（规则+LLM judge+ask 审批；judge prompt 在 prompt.go）
 listener/       回连接收器；guard/        审批门（Attributions 已回流 planner 态势）
 traffic/ vulnintel/ llmpool/ selfupdate/ report/（手写 OOXML，勿引第三方文档库） skills/
