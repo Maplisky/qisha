@@ -123,11 +123,15 @@ func intentBudgetFromPG(pg *db.DB) intentBudgetConfig {
 
 // budgetNudgeText 是预算到顶后的 steer 指令。要求收尾而不是杀进程：模型手里的结论
 // 还没写回时，硬杀等于把这一意图的工作全丢掉。
+//
+// 提醒自己也得给收尾留出路：写回与清理正是它要求的，所以 drainSteerFor 对这两类
+// 调用不投递；这里再明说一次，免得模型把「不要再开启新的探测动作」读成「什么都别做」。
 func budgetNudgeText(limit int64) string {
 	return fmt.Sprintf(
 		"【预算提醒】本意图的 token 消耗已达到预算上限（约 %d）。立即停止扩大探索范围："+
 			"把已经拿到的结论用 record_fact（发现漏洞则 report_finding）写回，然后直接给出结束答复。"+
-			"不要再开启新的探测动作；没来得及验证的方向留待规划者另派。",
+			"不要再开启新的探测动作；没来得及验证的方向留待规划者另派。"+
+			"写回与收尾不受这条提醒限制：如果你在目标上创建过测试对象（文件、数据、配置），先清理干净再收尾，并在结论里说明清理结果。",
 		limit)
 }
 

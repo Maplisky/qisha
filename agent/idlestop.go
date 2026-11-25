@@ -2,8 +2,10 @@ package agent
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
+	"regexp"
 	"sync"
 	"time"
 
@@ -302,6 +304,15 @@ func (h *idleStopHooks) PreToolUse(ctx context.Context, name string, input []byt
 		}
 		return false, "", nil
 	}
+	// 删除文件的命令同样放行。收场提醒要模型「停止调用工具」，可它手上可能还有没清理的
+	// 自建测试对象——拦下清理命令，东西就留在目标上了。计数照常推进（PostToolUse），
+	// 所以拿它绕不开收场。
+	if IsCleanupCommand(name, input) {
+		if h.inner != nil {
+			return h.inner.PreToolUse(ctx, name, input)
+		}
+		return false, "", nil
+	}
 	// inner（guard 管控链）先走——空转判据不能绕过拦截规则。
 	if h.inner != nil {
 		if block, msg, updated := h.inner.PreToolUse(ctx, name, input); block {
@@ -337,7 +348,7 @@ func (h *idleStopHooks) PreToolUse(ctx context.Context, name string, input []byt
 		}
 		return true, idleStopMessage + "（已多次提示未收场，本轮就此结束）", nil
 	}
-	return true, idleStopMessage + "（请立即写回并停止调用工具；再继续将结束本轮）", nil
+	return true, idleStopMessage + idleStopEscalation, nil
 }
 
 // PostToolUse 推进「一轮」的计数：一次工具执行 = 一轮。
@@ -384,7 +395,7 @@ func (h *idleStopHooks) Stop(ctx context.Context, messages []llm.Message) (bool,
 	// 提示后仍无写回：到 prevent 轮才真收场（未到只提醒，避免 Stop 路径
 	// 比 PreToolUse 更早切断）。
 	if rounds < idleStopPreventRounds {
-		return false, []string{idleStopMessage + "（请立即写回并停止调用工具；再继续将结束本轮）"}, ""
+		return false, []string{idleStopMessage + idleStopEscalation}, ""
 	}
 	if h.onStop != nil {
 		h.onStop(reason)
@@ -417,6 +428,31 @@ var idleStopWriteTools = map[string]bool{
 	"save_evidence": true,
 }
 
+// IsWriteBackTool 报告 name 是否为写回类工具：结束动作，收场类提醒（本钩子、意图
+// token 预算提醒）一律不拦。
+func IsWriteBackTool(name string) bool { return idleStopWriteTools[name] }
+
+// cleanupCommandRE 匹配「删除文件」的命令形态。
+var cleanupCommandRE = regexp.MustCompile(`(?i)\b(?:rm|rmdir|unlink|del|shred)\b|\bfind\b[^;&|\n]*-delete\b|os\.(?:remove|unlink|rmdir)\b|rmtree\(|remove-item\b`)
+
+// IsCleanupCommand 报告一次工具调用是不是在删除文件——worker 收尾时清理自己在目标上
+// 创建的测试对象，最常见的就是 Bash 里的 rm。
+//
+// 只用于收场类提醒的放行判断：认不准的后果至多是提醒晚一次调用才送达。它不是拦截
+// 规则，管控照常由 guard 链执行。
+func IsCleanupCommand(name string, input []byte) bool {
+	if name != "Bash" {
+		return false
+	}
+	var a struct {
+		Command string `json:"command"`
+	}
+	if err := json.Unmarshal(input, &a); err != nil {
+		return false
+	}
+	return cleanupCommandRE.MatchString(a.Command)
+}
+
 // idleStopMessage 是收场时给模型的说明。
 //
 // 说清「为什么收」很重要：模型看到「预算耗尽被终止」会以为是被惩罚，于是
@@ -426,8 +462,12 @@ const idleStopMessage = "本轮已连续多轮没有任何写回——这个方�
 	"1. 把**已经确认**的结果写回（这四种都算产出，写回后计数会重置）：\n" +
 	"   - 结论/观察/排除 → record_fact（**负结果也算**：「测了 X，无 Y，现象 Z」是一条事实）\n" +
 	"   - 新资产 → insert_assets；确认漏洞 → report_finding；现场证据 → save_evidence\n" +
-	"2. 写回完成后，用一句话纯文本总结你探到了什么、卡在哪里，结束本轮。\n\n" +
+	"2. 写回完成后，清理你在目标上创建过的测试对象（自建文件、测试数据等，清理命令不受本提醒限制），" +
+	"再用一句话纯文本总结你探到了什么、卡在哪里，结束本轮。\n\n" +
 	"这不是惩罚，是给你一次把成果落库的机会——已写回的内容全部保留。不要为了「有产出」把没验证的猜测写成事实。"
+
+// idleStopEscalation 是提示后仍不停时的追加说明。
+const idleStopEscalation = "（请立即写回并停止探测，再继续将结束本轮；清理自建测试对象不受此限）"
 
 // logIdleStop 记一条收场日志（统一格式，便于事后统计）。
 func logIdleStop(worker string, taskID int64, intentID int64, reason string) {

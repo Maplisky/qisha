@@ -145,11 +145,11 @@ type Engine struct {
 	workMu sync.Mutex
 	work   map[int64]*workExecution
 
-	// steerBox queues planner course-corrections for a running work (keyed by intent
+	// steerBox queues course-corrections for a running work (keyed by intent
 	// id). The worker's PreToolUse hook drains it before its next tool call and hands
 	// the message to the model (blocking that call) so it re-plans — no kill needed.
 	steerMu  sync.Mutex
-	steerBox map[int64][]string
+	steerBox map[int64][]steerMsg
 
 	plannerRound sync.Map // taskID -> int, planner round counter (for UI round separators)
 
@@ -526,7 +526,7 @@ func (e *Engine) autoAttributeCompany(t *Task) {
 func NewEngine(m *Manager) *Engine {
 	return &Engine{m: m, debounce: 800 * time.Millisecond, bc: NewBroadcaster(),
 		execCancel: map[string]context.CancelCauseFunc{}, execCtx: map[string]context.Context{},
-		work: map[int64]*workExecution{}, steerBox: map[int64][]string{},
+		work: map[int64]*workExecution{}, steerBox: map[int64][]steerMsg{},
 		runtimes: map[string]*taskRuntime{}}
 }
 
@@ -686,11 +686,38 @@ func addWriteCounts(dst, src agent.WriteCounts) agent.WriteCounts {
 	return dst
 }
 
+// steerKind 区分排队的纠偏指令从哪来，决定它拦不拦得下一次工具调用。
+type steerKind uint8
+
+const (
+	// steerFromOperator 是规划者（steer_work）、人（主 Agent 转达）或注入告警的实时纠偏：
+	// 到达后拦下紧接着的一次工具调用，让模型先读指令。
+	steerFromOperator steerKind = iota
+	// steerBudgetNudge 是意图 token 预算到顶的收尾提醒（intentBudgetWatcher）。
+	steerBudgetNudge
+)
+
+type steerMsg struct {
+	kind steerKind
+	text string
+}
+
 // SteerWork queues a mid-run course-correction for the work running intentID (the
 // planner's steer_work tool). The worker delivers it before its next tool call and
 // re-plans — no kill. Errors if no work is currently running that intent.
 func (e *Engine) SteerWork(intentID int64, msg string) error {
-	if strings.TrimSpace(msg) == "" {
+	return e.queueSteer(intentID, steerMsg{kind: steerFromOperator, text: msg})
+}
+
+// steerBudget queues the budget wrap-up nudge for the work running intentID. Unlike an
+// operator's course-correction it lets write-back and cleanup calls through — see
+// drainSteerFor.
+func (e *Engine) steerBudget(intentID int64, msg string) error {
+	return e.queueSteer(intentID, steerMsg{kind: steerBudgetNudge, text: msg})
+}
+
+func (e *Engine) queueSteer(intentID int64, m steerMsg) error {
+	if strings.TrimSpace(m.text) == "" {
 		return fmt.Errorf("纠偏消息不能为空")
 	}
 	e.workMu.Lock()
@@ -700,36 +727,48 @@ func (e *Engine) SteerWork(intentID int64, msg string) error {
 		return fmt.Errorf("意图 %d 当前没有运行中的 work（可能已结束或未被领取）", intentID)
 	}
 	e.steerMu.Lock()
-	e.steerBox[intentID] = append(e.steerBox[intentID], msg)
+	e.steerBox[intentID] = append(e.steerBox[intentID], m)
 	e.steerMu.Unlock()
 	return nil
 }
 
-// drainSteer pops the oldest queued steering message for intentID (FIFO), if any.
-func (e *Engine) drainSteer(intentID int64) (string, bool) {
+// drainSteerFor pops the oldest queued message that should interrupt the given tool
+// call, if any.
+//
+// A budget nudge asks the model to write back and wrap up, so it never interrupts a
+// write-back tool or a file-cleanup command: the call runs and the nudge stays queued
+// for the next call that isn't one. v1.0.1 的靶场验收里，被预算提醒拦下的恰好是删除
+// 自建测试文件的命令——模型要是照字面「停止调用工具」，文件就留在目标上了。
+// Operator course-corrections keep interrupting whatever comes next.
+func (e *Engine) drainSteerFor(intentID int64, name string, input []byte) (string, bool) {
 	e.steerMu.Lock()
 	defer e.steerMu.Unlock()
 	q := e.steerBox[intentID]
-	if len(q) == 0 {
-		return "", false
+	for i, m := range q {
+		if m.kind == steerBudgetNudge && (agent.IsWriteBackTool(name) || agent.IsCleanupCommand(name, input)) {
+			continue
+		}
+		rest := append(q[:i:i], q[i+1:]...)
+		if len(rest) == 0 {
+			delete(e.steerBox, intentID)
+		} else {
+			e.steerBox[intentID] = rest
+		}
+		return m.text, true
 	}
-	msg := q[0]
-	if len(q) == 1 {
-		delete(e.steerBox, intentID)
-	} else {
-		e.steerBox[intentID] = q[1:]
-	}
-	return msg, true
+	return "", false
 }
 
 // steerHooks wraps the guard's hook runner so the planner can steer a running work:
 // before each tool call it drains a queued course-correction (if any) and blocks the
 // call, handing the message back to the model — which re-plans its next step instead
 // of running the tool. No queued message → the guard behaves exactly as before.
+// 例外是意图预算的收尾提醒：它不拦写回与清理类调用（见 Engine.drainSteerFor）。
 // 它同时负责「空转回合」的续跑（Stop）与「重复调用」拦截（PreToolUse，v0.4.28）。
 type steerHooks struct {
 	inner harness.HookRunner
-	drain func() (string, bool)
+	// drain 取出应当拦下这次工具调用的纠偏消息（没有则返回 false）。
+	drain func(name string, input []byte) (string, bool)
 	// nudges 是本条意图已注入的空转续跑次数，上限 limit。指针:harness 持有的是
 	// steerHooks 的值拷贝，计数必须共享同一份。
 	nudges *atomic.Int64
@@ -786,7 +825,7 @@ func (h steerHooks) PreToolUse(ctx context.Context, name string, input []byte) (
 			return true, repeatBlockText(streak), nil
 		}
 	}
-	if msg, ok := h.drain(); ok {
+	if msg, ok := h.drain(name, input); ok {
 		return true, "【规划者实时纠偏】" + msg +
 			"\n（这是规划者对本意图的即时指令；本次工具调用未执行，请据此调整下一步。若与你当前打算冲突，以此为准。）", nil
 	}
@@ -1490,7 +1529,7 @@ func (e *Engine) runIntent(ctx context.Context, t *Task, name string, worker *ag
 	// 意图级软预算（v0.4.28）：usage 活动的累计 token 到顶 → steer 注入收尾提醒（软的，
 	// 不杀进程，一次为准）；重复调用检测器挂进 steerHooks。两者都可经 settings 关闭/调整。
 	if bw := intentBudgetWatcher(intentBudgetFromPG(e.m.pg), func(msg string) error {
-		return e.SteerWork(iid, msg)
+		return e.steerBudget(iid, msg)
 	}, label); bw != nil {
 		inner := emit
 		emit = func(a db.Activity) {
@@ -1532,7 +1571,7 @@ func (e *Engine) runIntent(ctx context.Context, t *Task, name string, worker *ag
 	// 重跑一轮不该把额度清零重来。
 	hooks := steerHooks{
 		inner:   t.Guard.Hooks(),
-		drain:   func() (string, bool) { return e.drainSteer(iid) },
+		drain:   func(name string, input []byte) (string, bool) { return e.drainSteerFor(iid, name, input) },
 		nudges:  &atomic.Int64{},
 		limit:   e.emptyTurnNudgeLimit(),
 		label:   label,
