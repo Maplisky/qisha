@@ -82,10 +82,16 @@ staticcheck 现存的非缺陷类条目：`ST1005`（错误字符串首字母大
   单独检出一份来跑，不要动手头的工作区）。全量测试前先给新鲜库（见上），并用独立的测试库——
   **不要指向正在使用的实例**。
 - **Windows 特有**：`evidence` 目录 fsync 已做 GOOS 分支；不要引入依赖目录 fsync 的新代码。
-- **竞态检测**：全仓 `go test -race -p 1 ./...`（新鲜库）里产品代码的竞争已清零——v1.0.1 修掉了 hostd 查询
-  安装进度时的作业状态竞争。还剩一份**只在测试里成立**的报告：测试辅助函数改写包级钩子
-  `agent.PromptOverride` 时，前一个用例遗留的规划协程还在读它（产品里它只在 `server.New` 赋值一次）。
-  撞上的用例会以「race detected during execution of test」失败（哪个用例撞上不一定），与改动无关。
+- **竞态检测**：全仓 `go test -race -p 1 ./...`（新鲜库）里本仓库代码的竞争已清零——v1.0.1 修掉了 hostd 查询
+  安装进度时的作业状态竞争。还剩两处已知的、不是回归的报告：
+  ① **只在测试里成立**——测试辅助函数改写包级钩子 `agent.PromptOverride` 时，前一个用例遗留的规划协程
+  还在读它（产品里它只在 `server.New` 赋值一次）。撞上的用例会以「race detected during execution of test」
+  失败（哪个用例撞上不一定），与改动无关。
+  ② **入库引擎里的一处**——工具卡住超过墙钟上限、且配置了收尾（`Settlement`）时，主循环进收尾会就地
+  重赋 `toolCtx`（`third_party/norma/harness/query.go` 的收尾分支），与还没退出的工具协程相撞。用例一旦
+  走出「卡住的工具 + `MaxDuration` + `Settlement`」这条路径，`-race` 就会把它判失败；要复现「上限撞上
+  工具收尾」的时序，像 `agent/capture_interrupted_test.go` 那样不配收尾、改用别的方式留时间窗口。
+  引擎目录按约定不改（见第 3 节第 7 条）。
   改并发相关的代码后跑一遍，看有没有**新的**报告。
 - **不要用 `-shuffle`**：`db/notification_test.go` 里的用例互相有顺序依赖（如 `TestClaimExpiredLeaseRecovers`、
   `TestDigestBatchDueAndStableBatchID`、`TestListNotificationDeliveriesPagingAndFilter`），随机排序会假失败。
@@ -140,6 +146,9 @@ staticcheck 现存的非缺陷类条目：`ST1005`（错误字符串首字母大
 - **静态导出不支持服务端 redirect()**：会被静默丢弃、路由导出成 404 页。用客户端
   `router.replace`（v0.3.88 根路由修复先例）。
 - **纯读工具用 readTool/readExpTool**：writeTool 会丢 ReadOnly/Concurrent 标记，被调度串行化。
+- **不要对上游遗留的 Go 文件整体 `gofmt -w`**：`agent/chat.go`、`agent/capture.go` 的 import 顺序、
+  `server/engine_guard.go` 的常量对齐本来就不是 gofmt 格式（ci 不查 gofmt），整体格式化会带出无关的改动行。
+  只格式化自己新建的文件；改已有文件后看一眼 `git diff`，把无关的格式变化还原。
 - **改过脚本后看一眼可执行位**：`build.sh`、`install.sh`、`start.sh`、`reset-password.sh`、`dev.sh` 必须可执行
   （发版流程直接 `./build.sh`）。经 UNC 路径编辑文件的工具会重写整个文件、丢掉可执行位，而 `ci` 不直接跑这些
   脚本，丢了也不红——v1.0.0 之后丢过一次。提交前 `git diff --cached --summary | grep "mode change"` 应为空；

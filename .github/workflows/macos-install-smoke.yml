@@ -29,7 +29,7 @@ jobs:
     env:
       # 冒烟钉一个明确的已发布版本，避免 latest 变动导致不可复现；
       # 七杀自 v1.0.0 起发布 darwin 包。
-      POJUN_SMOKE_VERSION: v1.0.1
+      POJUN_SMOKE_VERSION: v1.0.2
     steps:
       - uses: actions/checkout@v5
 

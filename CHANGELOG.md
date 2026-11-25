@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-11-25
+
+维护版本，没有新功能：修复靶场验收中发现的三处行为问题。
+
 ### 修复
 
 - **证据闸门不再把非 HTTP 漏洞往「HTTP 状态码」上逼。** critical/high 的证据校验此前只认 HTTP 形态的字面
@@ -3718,7 +3722,8 @@ done 18 / exhausted 99 / blocked 82——**exhausted 是 done 的 5.5 倍**，�
 - [@Autumn-27](https://github.com/Autumn-27)
 - [@neouks](https://github.com/neouks)
 
-[Unreleased]: https://github.com/Maplisky/qisha/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/Maplisky/qisha/compare/v1.0.2...HEAD
+[1.0.2]: https://github.com/Maplisky/qisha/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/Maplisky/qisha/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/Maplisky/qisha/compare/055e87137d4f4d1960b059bf84c42ccb5d0b3fac...v1.0.0
 [0.3.10]: https://github.com/chu0119/Pojun/compare/v0.3.9...v0.3.10
