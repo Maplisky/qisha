@@ -1,14 +1,14 @@
 # docs/
 
-本目录是设计文档与阶段快照。除下面列出的以外，它们都写于上游 Pojun（破军）时期：
-文档里的「破军」「Pojun」指的就是本项目的前身，仓库地址指上游 `chu0119/Pojun`。
+本目录是设计文档与阶段快照。除下面列出的以外，它们都写于七杀之前——先是 ARTEX、后是 Pojun（破军）时期：
+文档里的「ARTEX」「破军」「Pojun」指的都是本项目的前身，仓库地址指上游 `chu0119/Pojun`。
 **产品现状以根目录的 [README.md](../README.md) 与 [AGENTS.md](../AGENTS.md) 为准。**
 
 ## 七杀自己的说明
 
 | 内容 | 位置 |
 |---|---|
-| 与上游 Pojun 的差异、从上游原地升级 | [README](../README.md#七杀与上游-pojun-的差异) |
+| 来历（ARTEX → Pojun → 七杀）、安装、使用、从 Pojun 迁移 | [README](../README.md) |
 | 来源与第三方声明 | [NOTICE](../NOTICE)、[third_party/README.md](../third_party/README.md) |
 | 逐版本变更（七杀自 1.0.0 起，上游历史在其后） | [CHANGELOG.md](../CHANGELOG.md) |
 | 任务级收尾上限（时间上限 / 规划轮数上限 / 超时后继续运行） | 代码：`db/task_limits.go`、`server/task_resume.go`、`server/auto_finish.go` |

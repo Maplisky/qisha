@@ -8,7 +8,7 @@
 #   POJUN_TARGET_OS=linux             One target OS in single-target mode.
 #   POJUN_TARGET_ARCH=amd64           One target arch in single-target mode.
 #   POJUN_TARGETS=linux/amd64,...     Comma-separated targets for multi-target mode.
-#   POJUN_BUILD_VERSION=v0.3.3        Version embedded in the binary and archive name.
+#   POJUN_BUILD_VERSION=v1.0.0        Version embedded in the binary and archive name.
 #   POJUN_OUTPUT=/path/to/pojun       Explicit binary path in single-target mode.
 #   POJUN_OUTPUT_DIR=dist             Directory for default binary paths.
 #   POJUN_PACKAGE=1                   Create a zip archive for each target.

@@ -2,17 +2,25 @@
 =============================
 
 七杀 Qisha 以 GNU Affero General Public License v3 发布，全文见同目录的 LICENSE。
-本项目是独立项目，与下列项目的作者没有隶属关系。血统与致意如下。
+本项目是独立项目，与下列项目的作者没有隶属关系。来历如下。
 
-1. chu0119/Pojun（破军）
-------------------------
-   七杀 fork 自 https://github.com/chu0119/Pojun 的 v0.4.86，许可 AGPL-3.0。
-   Pojun 本身接手自已删除的原作者项目 Autumn-27/ARTEX
-   （https://github.com/Autumn-27/ARTEX ，百度“Agent+”攻防挑战赛冠军项目）的最终定版 v0.3.15，
-   并在其后独立演进。双图架构、planner/worker 编排、MITM 流量代理、审批门框架与基础工具集
-   都来自这条线。七杀的 git 历史完整保留了上述两个项目的全部提交。
+1. ARTEX（原作者 Autumn-27 及其贡献者）
+--------------------------------------
+   https://github.com/Autumn-27/ARTEX （原仓库已被作者删除），许可 AGPL-3.0。
+   全称 Agentic Red-Team Exploration and eXecution，是一个以 Norma 为内核的 AI 自主渗透
+   测试系统，也是这个代码库的起点：资产图与探索图的双图结构、planner/worker 编排、
+   流量记录代理、范围守卫与审批门这套骨架都出自 ARTEX 时期。最终定版 v0.3.15。
 
-2. sapper-v2（军团调度条令的来源）
+2. chu0119/Pojun（破军，维护者 chu0119）
+-----------------------------------------
+   https://github.com/chu0119/Pojun ，许可 AGPL-3.0。
+   Pojun 在 ARTEX 原仓库删除之后接手，自 v0.3.16 起独立演进，并于 v0.4.19（2026-11-02）
+   由 ARTEX 更名为 Pojun。七杀 fork 自其 v0.4.86。
+   七杀的 git 历史保留了上述两个时期的全部提交。需要说明的是：其中 ARTEX 时期
+   （2026-10-10 之前）的提交在这份历史里署名为 Pojun 维护者，原作者的署名没有随历史
+   保留下来。
+
+3. sapper-v2（军团调度条令的来源）
 ----------------------------------
    https://github.com/N1nEmAn/sapper-v2 ，许可 MIT。
    七杀的军团调度条令——规划者内置提示词中的「多目标调度军规」，以及内置技能
@@ -43,13 +51,13 @@
    SOFTWARE.
    ---------------------------------------------------------------------
 
-3. norma（Agent 引擎 / harness SDK）
+4. norma（Agent 引擎 / harness SDK）
 ------------------------------------
    位于 `third_party/norma/`，取自 `github.com/chu0119/Norma` 的 v0.4.4（`github.com/Autumn-27/norma`
    的 fork），许可 Apache License 2.0，全文见 `third_party/norma/LICENSE`。内容未作改动。
    出处与升级方式见 `third_party/README.md`。
 
-4. 其余依赖与语料
+5. 其余依赖与语料
 ------------------
    通过 `go.mod` / `web/package-lock.json` 引入的第三方库，以及 SecLists、nuclei-templates 等
    语料，各自的许可以其发布仓库为准。

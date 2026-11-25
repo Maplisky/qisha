@@ -10,10 +10,14 @@
 planner/worker 双角色多 Agent 自主推进，双图架构（资产图×探索图），三层拦截规则，全程证据留痕，
 外加军团调度条令与任务级收尾上限。**仅供授权测试**（README 免责条款）。
 
-**与上游的关系**：七杀 fork 自 [chu0119/Pojun](https://github.com/chu0119/Pojun)（破军）的 v0.4.86，
-自 v1.0.0 起独立演进，**不跟随上游发版**。模块路径 `github.com/Maplisky/qisha`，发布源
-`Maplisky/qisha`（`selfupdate.Repo`）。Pojun 又接手自已删除的原作者仓库（基线 v0.3.15），
-git 历史完整保留。
+**血统**：ARTEX（原作者 Autumn-27，原仓库已删除，最终定版 v0.3.15）→ [chu0119/Pojun](https://github.com/chu0119/Pojun)
+（破军；2026-10 接手，v0.3.16 起独立演进，v0.4.19 由 ARTEX 更名）→ 七杀（fork 自 v0.4.86，自 v1.0.0 起独立演进，
+**不跟随上游发版**）。模块路径 `github.com/Maplisky/qisha`，发布源 `Maplisky/qisha`（`selfupdate.Repo`）。
+git 历史保留了两个时期的全部提交，但 **ARTEX 时期（2026-10-10 之前）的提交在这份历史里署名是 Pojun 维护者**，
+`git log` 看不出原作者——来历写在 README「血统」一节与 NOTICE，改那两处前先核对事实。
+
+**对外文档只写七杀自己的内容**：README、NOTICE 这类面向外部的文档不要从上游仓库搬文字或截图
+（上游的截图已从仓库移除）。需要说明的功能与数字以代码为准，查不到就不写。
 
 **改了什么、没改什么（动品牌相关的东西前先看这段）**：
 
@@ -22,7 +26,7 @@ git 历史完整保留。
   可执行文件名 `pojun`、安装目录 `/opt/pojun`、systemd 服务名、环境变量前缀 `POJUN_*`、
   登录用户名 `POJUN`、cookie 与本地存储键（`pojun_token`、`pojun_*`）、Clash 策略组名 `POJUN-AUTO`、
   给模型看的标记串（`POJUN_WORKER_CHAT`、平台管控前缀）、Release 资产命名 `pojun-<ver>-<os>-<arch>.zip`。
-- `docs/` 里的文档是上游 Pojun 时期的设计文档与阶段快照，里面的「破军」「Pojun」指的就是本项目的前身。
+- `docs/` 里的文档是前身时期（ARTEX / Pojun）的设计文档与阶段快照，里面的「ARTEX」「破军」「Pojun」指的都是本项目的前身。
 - 页签图标不走 `web/src/app/icon.png` / `favicon.ico` 这类静态文件约定——那会写进每一页的 `<head>`，包括未登录的
   登录页（上游的 `favicon.ico` / `icon.png` 就是这样被带到每个页面的）。匿名页不引用任何产品图像；登录后由
   `web/src/app/(main)/_components/tab-icon.tsx` 挂上 `/logo.png`。换图标改 `web/public/logo.png`

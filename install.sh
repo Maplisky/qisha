@@ -63,7 +63,7 @@ usage(){
   --with-tools           顺装常用渗透工具（Docker 形态下工具随镜像固定，见说明）
 
 通用:
-  --version=VER          版本，默认 latest（如 v0.3.20）
+  --version=VER          版本，默认 latest（如 v1.0.0）
   --dir=PATH             安装目录（默认 /opt/pojun）
   --listen=ADDR          监听地址（默认 :8787）
   --proxy=ADDR           流量记录代理地址（默认 127.0.0.1:8788）
@@ -81,7 +81,7 @@ Docker 形态专用:
 
 示例:
   sudo ./install.sh --mode=binary --with-tools
-  sudo ./install.sh --mode=docker --version=v0.3.20
+  sudo ./install.sh --mode=docker --version=v1.0.0
   sudo ./install.sh --mode=binary --install-proxy=http://10.0.0.14:7897 --with-tools
 EOF
 }
